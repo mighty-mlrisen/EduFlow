@@ -13,7 +13,8 @@
 9. [Эндпоинты: Комментарии](#9-эндпоинты-комментарии)
 10. [Обработка ошибок](#10-обработка-ошибок)
 11. [Категории](#11-категории)
-12. [Жизненный цикл сессии](#12-жизненный-цикл-сессии)
+12. [Эндпоинты: Статистика](#12-эндпоинты-статистика)
+13. [Жизненный цикл сессии](#13-жизненный-цикл-сессии)
 
 ---
 
@@ -133,7 +134,7 @@ Authorization: Bearer <accessToken>
 {
   "currentUserId": 1,
   "articleId": 42,
-  "users": { ...ProfileResponse },
+  "users": { "...ProfileResponse": "..." },
   "category": {
     "id": 12,
     "name": "frontend"
@@ -147,7 +148,8 @@ Authorization: Bearer <accessToken>
   "draft": false,
   "statusSave": false,
   "likes": 15,
-  "statusLike": true
+  "statusLike": true,
+  "commentsCount": 3
 }
 ```
 
@@ -167,6 +169,7 @@ Authorization: Bearer <accessToken>
 | `statusSave` | `Boolean` | Сохранена ли статья текущим пользователем |
 | `likes` | `Integer` | Количество лайков |
 | `statusLike` | `Boolean` | Лайкнул ли текущий пользователь |
+| `commentsCount` | `Integer` | Количество комментариев к статье |
 
 ---
 
@@ -175,8 +178,8 @@ Authorization: Bearer <accessToken>
 ```json
 {
   "commentId": 5,
-  "article": { ...ArticleResponse },
-  "author": { ...ProfileResponse },
+  "article": { "...ArticleResponse": "..." },
+  "author": { "...ProfileResponse": "..." },
   "comment": "Текст комментария"
 }
 ```
@@ -198,6 +201,142 @@ Authorization: Bearer <accessToken>
   "name": "frontend"
 }
 ```
+
+---
+
+### ArticleStatEntry (запись статистики статьи)
+
+Используется в обоих ответах статистики — в глобальной топ-10 и в личной топ-5.
+
+```json
+{
+  "articleId": 42,
+  "title": "Заголовок статьи",
+  "authorUsername": "Иван Иванов",
+  "authorAvatar": "https://example.com/avatar.jpg",
+  "count": 128
+}
+```
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `articleId` | `Long` | ID статьи |
+| `title` | `String` | Заголовок статьи |
+| `authorUsername` | `String` | Имя автора (`null` в личной статистике — автор известен) |
+| `authorAvatar` | `String` | Аватар автора (`null` в личной статистике) |
+| `count` | `Long` | Число лайков **или** комментариев — зависит от контекста списка |
+
+---
+
+### AuthorStatEntry (запись статистики автора)
+
+```json
+{
+  "userId": 1,
+  "username": "Иван Иванов",
+  "login": "user@example.com",
+  "avatar": "https://example.com/avatar.jpg",
+  "count": 340
+}
+```
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `userId` | `Long` | ID пользователя |
+| `username` | `String` | Отображаемое имя |
+| `login` | `String` | Логин |
+| `avatar` | `String` | URL аватара (может быть `null`) |
+| `count` | `Long` | Суммарное число лайков **или** подписчиков — зависит от контекста списка |
+
+---
+
+### CategoryStatEntry (статистика категории)
+
+```json
+{
+  "categoryName": "frontend",
+  "articleCount": 47
+}
+```
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `categoryName` | `String` | Название категории |
+| `articleCount` | `Long` | Число опубликованных статей в категории |
+
+---
+
+### GlobalStatsResponse (глобальная статистика платформы)
+
+```json
+{
+  "totalUsers": 1250,
+  "totalArticles": 3480,
+  "totalPublished": 3100,
+  "totalDrafts": 380,
+  "totalComments": 12400,
+  "totalLikes": 54300,
+  "totalSubscriptions": 8700,
+  "newUsersLastWeek": 42,
+  "top10ArticlesByLikes": [ "...ArticleStatEntry[]" ],
+  "top10AuthorsByLikes": [ "...AuthorStatEntry[]" ],
+  "top10AuthorsBySubscribers": [ "...AuthorStatEntry[]" ],
+  "categoryStats": [ "...CategoryStatEntry[]" ]
+}
+```
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `totalUsers` | `Long` | Всего зарегистрированных пользователей |
+| `totalArticles` | `Long` | Всего статей (включая черновики) |
+| `totalPublished` | `Long` | Всего опубликованных статей |
+| `totalDrafts` | `Long` | Всего черновиков |
+| `totalComments` | `Long` | Всего комментариев на платформе |
+| `totalLikes` | `Long` | Всего лайков на платформе |
+| `totalSubscriptions` | `Long` | Всего пар подписчик–автор |
+| `newUsersLastWeek` | `Long` | Новых пользователей за последние 7 дней |
+| `top10ArticlesByLikes` | `ArticleStatEntry[]` | Топ-10 статей по числу лайков |
+| `top10AuthorsByLikes` | `AuthorStatEntry[]` | Топ-10 авторов по суммарным лайкам (`count` = сумма лайков) |
+| `top10AuthorsBySubscribers` | `AuthorStatEntry[]` | Топ-10 авторов по числу подписчиков (`count` = число подписчиков) |
+| `categoryStats` | `CategoryStatEntry[]` | Все категории с числом статей, сортировка по убыванию |
+
+---
+
+### UserStatsResponse (статистика текущего пользователя)
+
+```json
+{
+  "publishedArticles": 12,
+  "drafts": 3,
+  "commentsGiven": 87,
+  "savedArticlesCount": 25,
+  "totalLikesReceived": 340,
+  "avgLikesPerArticle": 28.3,
+  "followersCount": 64,
+  "subscriptionsCount": 18,
+  "articlesLast30Days": 2,
+  "commentsLast30Days": 14,
+  "lastPublicationDate": "2026-06-07T18:32:00",
+  "top5ArticlesByLikes": [ "...ArticleStatEntry[]" ],
+  "top5ArticlesByComments": [ "...ArticleStatEntry[]" ]
+}
+```
+
+| Поле | Тип | Описание |
+|---|---|---|
+| `publishedArticles` | `Long` | Количество опубликованных статей |
+| `drafts` | `Long` | Количество черновиков |
+| `commentsGiven` | `Long` | Количество комментариев, написанных пользователем |
+| `savedArticlesCount` | `Long` | Количество сохранённых статей |
+| `totalLikesReceived` | `Long` | Суммарное число лайков на всех статьях |
+| `avgLikesPerArticle` | `Double` | Среднее число лайков на опубликованную статью (0.0 если нет статей) |
+| `followersCount` | `Long` | Число подписчиков |
+| `subscriptionsCount` | `Long` | Число подписок |
+| `articlesLast30Days` | `Long` | Опубликованных статей за последние 30 дней |
+| `commentsLast30Days` | `Long` | Написанных комментариев за последние 30 дней |
+| `lastPublicationDate` | `String` | Дата последней публикации, ISO 8601 (`null` если не публиковал) |
+| `top5ArticlesByLikes` | `ArticleStatEntry[]` | Топ-5 своих статей по лайкам (`count` = число лайков) |
+| `top5ArticlesByComments` | `ArticleStatEntry[]` | Топ-5 своих статей по комментариям (`count` = число комментариев) |
 
 ---
 
@@ -461,6 +600,24 @@ Authorization: Bearer <accessToken>
 
 ---
 
+### DELETE /user/article/{articleId} — Удалить статью или черновик
+
+**Path params:**
+
+| Параметр | Тип | Описание |
+|---|---|---|
+| `articleId` | `Long` | ID статьи для удаления |
+
+**Response `204 No Content`:** статья успешно удалена
+
+**Response `403 Forbidden`:** текущий пользователь не является автором статьи
+
+**Response `404 Not Found`:** статья не найдена
+
+> Удалить можно как опубликованную статью, так и черновик. Только автор может удалить свою статью. Удаление необратимо.
+
+---
+
 ### GET /user/article/{articleId} — Получить статью по ID
 
 **Path params:**
@@ -651,7 +808,7 @@ Authorization: Bearer <accessToken>
 |---|---|---|
 | `400 Bad Request` | Невалидные данные, дубликат действия (лайк уже стоит) | Показать сообщение из `message` |
 | `401 Unauthorized` | Токен истёк, невалидный токен | Вызвать `POST /auth/refreshtoken`, при неудаче — редирект на `/login` |
-| `403 Forbidden` | Refresh token истёк | Редирект на `/login` |
+| `403 Forbidden` | Refresh token истёк или нет прав (не автор) | Редирект на `/login` или показать 403 |
 | `404 Not Found` | Сущность не найдена | Показать страницу 404 |
 | `500 Internal Server Error` | Серверная ошибка | Показать общую ошибку |
 
@@ -710,7 +867,115 @@ async function request(config) {
 
 ---
 
-## 12. Жизненный цикл сессии
+## 12. Эндпоинты: Статистика
+
+Оба эндпоинта требуют `Authorization: Bearer <token>`
+
+---
+
+### GET /stats/global — Глобальная статистика платформы
+
+**Response `200 OK`:** → `GlobalStatsResponse`
+
+**Пример ответа:**
+```json
+{
+  "totalUsers": 1250,
+  "totalArticles": 3480,
+  "totalPublished": 3100,
+  "totalDrafts": 380,
+  "totalComments": 12400,
+  "totalLikes": 54300,
+  "totalSubscriptions": 8700,
+  "newUsersLastWeek": 42,
+  "top10ArticlesByLikes": [
+    {
+      "articleId": 42,
+      "title": "Лучшая статья",
+      "authorUsername": "Иван Иванов",
+      "authorAvatar": "https://example.com/avatar.jpg",
+      "count": 512
+    }
+  ],
+  "top10AuthorsByLikes": [
+    {
+      "userId": 1,
+      "username": "Иван Иванов",
+      "login": "ivan@example.com",
+      "avatar": "https://example.com/avatar.jpg",
+      "count": 1840
+    }
+  ],
+  "top10AuthorsBySubscribers": [
+    {
+      "userId": 3,
+      "username": "Анна Смирнова",
+      "login": "anna@example.com",
+      "avatar": null,
+      "count": 430
+    }
+  ],
+  "categoryStats": [
+    { "categoryName": "IT сфера", "articleCount": 640 },
+    { "categoryName": "frontend", "articleCount": 380 }
+  ]
+}
+```
+
+> `top10AuthorsByLikes` — поле `count` содержит **суммарные лайки** автора.  
+> `top10AuthorsBySubscribers` — поле `count` содержит **число подписчиков**.  
+> `top10ArticlesByLikes` — поле `count` содержит **число лайков** статьи.  
+> `categoryStats` — все категории, упорядочены по убыванию числа статей.
+
+---
+
+### GET /user/stats — Статистика текущего пользователя
+
+**Response `200 OK`:** → `UserStatsResponse`
+
+**Пример ответа:**
+```json
+{
+  "publishedArticles": 12,
+  "drafts": 3,
+  "commentsGiven": 87,
+  "savedArticlesCount": 25,
+  "totalLikesReceived": 340,
+  "avgLikesPerArticle": 28.3,
+  "followersCount": 64,
+  "subscriptionsCount": 18,
+  "articlesLast30Days": 2,
+  "commentsLast30Days": 14,
+  "lastPublicationDate": "2026-06-07T18:32:00",
+  "top5ArticlesByLikes": [
+    {
+      "articleId": 42,
+      "title": "Моя лучшая статья",
+      "authorUsername": null,
+      "authorAvatar": null,
+      "count": 128
+    }
+  ],
+  "top5ArticlesByComments": [
+    {
+      "articleId": 17,
+      "title": "Обсуждаемая статья",
+      "authorUsername": null,
+      "authorAvatar": null,
+      "count": 34
+    }
+  ]
+}
+```
+
+> В `top5ArticlesByLikes` поле `count` = число лайков.  
+> В `top5ArticlesByComments` поле `count` = число комментариев.  
+> `authorUsername` и `authorAvatar` всегда `null` в личной статистике (автор — сам текущий пользователь).  
+> `lastPublicationDate` возвращается в формате ISO 8601 (`null` если пользователь ещё не публиковал статьи).
+
+---
+
+## 13. Жизненный цикл сессии
 
 ```
 Регистрация / Вход
@@ -756,6 +1021,7 @@ async function request(config) {
 | `GET` | `/user/subscribers/{userId}` | Да | Подписчики пользователя |
 | `POST` | `/user/article` | Да | Создать статью |
 | `PUT` | `/user/article/{id}?articleId={id}` | Да | Обновить статью |
+| `DELETE` | `/user/article/{articleId}` | Да | Удалить статью / черновик |
 | `GET` | `/user/article` | Да | Мои статьи |
 | `GET` | `/user/article/{articleId}` | Да | Статья по ID |
 | `GET` | `/user/article/user/{userId}` | Да | Статьи пользователя по ID |
@@ -771,3 +1037,5 @@ async function request(config) {
 | `GET` | `/user/saved/articles` | Да | Сохранённые статьи |
 | `POST` | `/user/article/{articleId}/comment` | Да | Добавить комментарий |
 | `GET` | `/user/article/{articleId}/comment` | Да | Комментарии к статье |
+| `GET` | `/stats/global` | Да | Глобальная статистика платформы |
+| `GET` | `/user/stats` | Да | Статистика текущего пользователя |

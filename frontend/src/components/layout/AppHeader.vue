@@ -129,7 +129,7 @@ function logout() {
           <div ref="catMenuRef" class="relative">
             <button
               @click="toggleCatMenu"
-              class="px-4 py-2 text-base font-medium rounded-lg transition-colors flex items-center gap-1"
+              class="px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
               :class="$route.name === 'category'
                 ? 'bg-blue-50 text-blue-600'
                 : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -183,7 +183,7 @@ function logout() {
           <!-- Моя лента -->
           <RouterLink
             :to="{ name: 'subscription-feed' }"
-            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
             :class="$route.name === 'subscription-feed'
               ? 'bg-blue-50 text-blue-600'
               : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -194,7 +194,7 @@ function logout() {
           <!-- Публикации -->
           <RouterLink
             :to="{ name: 'publish' }"
-            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
             :class="$route.name === 'publish'
               ? 'bg-blue-50 text-blue-600'
               : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -205,17 +205,28 @@ function logout() {
           <!-- Избранное -->
           <RouterLink
             :to="{ name: 'saved' }"
-            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
             :class="$route.name === 'saved'
               ? 'bg-blue-50 text-blue-600'
               : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
           >
             Избранное
           </RouterLink>
+
+          <!-- Статистика -->
+          <RouterLink
+            :to="{ name: 'stats' }"
+            class="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            :class="$route.name === 'stats'
+              ? 'bg-blue-50 text-blue-600'
+              : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
+          >
+            Статистика
+          </RouterLink>
         </nav>
 
         <!-- Поиск -->
-        <div ref="searchRef" class="relative flex-1 max-w-md">
+        <div ref="searchRef" class="relative flex-1">
           <div class="flex items-center bg-gray-100 rounded-full px-3 py-1.5 gap-2 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-400 transition-all">
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>

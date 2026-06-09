@@ -75,6 +75,12 @@ const router = createRouter({
       component: () => import('@/views/saved/SavedArticlesView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/stats',
+      name: 'stats',
+      component: () => import('@/views/stats/StatsView.vue'),
+      meta: { requiresAuth: true }
+    },
 
     { path: '/:pathMatch(.*)*', redirect: '/' }
   ]

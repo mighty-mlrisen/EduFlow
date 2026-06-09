@@ -2,6 +2,7 @@ package com.guidepedia.repo;
 
 import com.guidepedia.model.entity.ArticleEntity;
 import com.guidepedia.model.entity.CommentEntity;
+import com.guidepedia.model.entity.UserEntity;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,6 +18,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     List<CommentEntity> findByArticle(ArticleEntity article);
 
     long countByArticle(ArticleEntity article);
+    long countByUser(UserEntity user);
+    long countByUserAndCreatedAtAfter(UserEntity user, java.time.LocalDateTime date);
 
     @Caching(
             evict = {

@@ -1,1 +1,0 @@
-import{d as t,c as o,b as s,o as a}from"./index-Bf_YlgZI.js";const c=t({__name:"SavedArticlesView",setup(n){return(r,e)=>(a(),o("div",null,[...e[0]||(e[0]=[s("h1",{class:"text-2xl font-bold mb-4"},"Сохранённые статьи",-1)])]))}});export{c as default};

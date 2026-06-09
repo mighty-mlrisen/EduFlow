@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -29,4 +30,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Boolean existsByLogin(String login);
 
     java.util.List<UserEntity> findByUsernameContainingIgnoreCase(String username);
+    long countByCreatedAtAfter(LocalDateTime date);
 }
