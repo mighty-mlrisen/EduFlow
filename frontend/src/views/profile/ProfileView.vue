@@ -113,6 +113,11 @@ async function loadArticles() {
   finally { articlesLoading.value = false }
 }
 
+function onLikeUpdate(articleId: number, likes: number) {
+  const art = articles.value.find((a) => a.articleId === articleId)
+  if (art) art.likes = likes
+}
+
 function setTab(tab: Tab) {
   activeTab.value = tab
   searchQuery.value = ''
@@ -272,6 +277,7 @@ function formatDate(dateStr: string) {
               v-for="article in paginatedArticles"
               :key="article.articleId"
               :article="article"
+              @like-update="onLikeUpdate"
             />
           </div>
 

@@ -64,6 +64,11 @@ function goToPage(p: number) {
   currentPage.value = p
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+function onLikeUpdate(articleId: number, likes: number) {
+  const art = articles.value.find((a) => a.articleId === articleId)
+  if (art) art.likes = likes
+}
 </script>
 
 <template>
@@ -128,6 +133,7 @@ function goToPage(p: number) {
               v-for="article in paginatedArticles"
               :key="article.articleId"
               :article="article"
+              @like-update="onLikeUpdate"
             />
           </div>
 

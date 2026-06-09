@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { toggleReaction } from '@/api/article.api'
 
 const props = defineProps<{ articleId: number; liked: boolean; count: number; large?: boolean }>()
+const emit = defineEmits<{ change: [likes: number] }>()
 
 const isLiked = ref(props.liked)
 const likeCount = ref(props.count)
@@ -20,6 +21,7 @@ async function toggle(e: MouseEvent) {
     const result = await toggleReaction(props.articleId, !isLiked.value)
     isLiked.value = result.statusLike
     likeCount.value = result.likes
+    emit('change', result.likes)
   } catch {
     // 400 — already liked/unliked, ignore
   } finally {

@@ -3,7 +3,8 @@ import type { ArticleResponse } from '@/types/article.types'
 import SaveButton from './SaveButton.vue'
 import LikeButton from './LikeButton.vue'
 
-defineProps<{ article: ArticleResponse }>()
+const props = defineProps<{ article: ArticleResponse }>()
+const emit = defineEmits<{ likeUpdate: [articleId: number, likes: number] }>()
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
@@ -86,9 +87,10 @@ function formatDate(dateStr: string) {
     <!-- 5. Likes -->
     <div class="flex items-center">
       <LikeButton
-        :article-id="article.articleId"
-        :liked="article.statusLike"
-        :count="article.likes"
+        :article-id="props.article.articleId"
+        :liked="props.article.statusLike"
+        :count="props.article.likes"
+        @change="(likes) => emit('likeUpdate', props.article.articleId, likes)"
       />
     </div>
 

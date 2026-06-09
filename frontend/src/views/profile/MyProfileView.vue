@@ -166,6 +166,11 @@ function setTab(tab: Tab) {
   currentPage.value = 1
 }
 
+function onLikeUpdate(articleId: number, likes: number) {
+  const art = articles.value.find((a) => a.articleId === articleId)
+  if (art) art.likes = likes
+}
+
 const initials = computed(() => {
   const name = profile.value?.username || profile.value?.login || '?'
   return name.charAt(0).toUpperCase()
@@ -434,6 +439,7 @@ function roleLabel(_role: string) {
                 v-for="article in paginatedArticles"
                 :key="article.articleId"
                 :article="article"
+                @like-update="onLikeUpdate"
               />
             </div>
 
