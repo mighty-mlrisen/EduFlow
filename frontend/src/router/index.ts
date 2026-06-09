@@ -44,22 +44,9 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/article/create',
-      name: 'article-create',
-      component: () => import('@/views/article/CreateArticleView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/article/drafts',
-      name: 'article-drafts',
-      component: () => import('@/views/article/DraftsView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/article/edit/:id',
-      name: 'article-edit',
-      component: () => import('@/views/article/EditArticleView.vue'),
-      props: (route) => ({ articleId: Number(route.params.id) }),
+      path: '/publish',
+      name: 'publish',
+      component: () => import('@/views/publish/PublishView.vue'),
       meta: { requiresAuth: true }
     },
     {

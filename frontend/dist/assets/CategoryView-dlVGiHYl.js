@@ -1,0 +1,1 @@
+import{d as o,c as t,b as a,o as r}from"./index-Bf_YlgZI.js";const p=o({__name:"CategoryView",props:{categoryId:{}},setup(s){return(n,e)=>(r(),t("div",null,[...e[0]||(e[0]=[a("h1",{class:"text-2xl font-bold mb-4"},"Категория",-1)])]))}});export{p as default};

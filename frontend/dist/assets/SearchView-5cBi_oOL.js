@@ -1,0 +1,1 @@
+import{d as t,c as o,b as a,o as n}from"./index-Bf_YlgZI.js";const c=t({__name:"SearchView",setup(s){return(r,e)=>(n(),o("div",null,[...e[0]||(e[0]=[a("h1",{class:"text-2xl font-bold mb-4"},"Поиск",-1)])]))}});export{c as default};

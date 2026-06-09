@@ -1,0 +1,1 @@
+import{d as t,c as o,b as n,o as s}from"./index-Bf_YlgZI.js";const c=t({__name:"SubscriptionFeedView",setup(a){return(r,e)=>(s(),o("div",null,[...e[0]||(e[0]=[n("h1",{class:"text-2xl font-bold mb-4"},"Мои подписки",-1)])]))}});export{c as default};

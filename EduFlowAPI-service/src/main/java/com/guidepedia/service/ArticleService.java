@@ -60,8 +60,8 @@ public class ArticleService {
         articleEntity.setDescription(articleRequest.getDescription());
         articleEntity.setCreatedAt(LocalDateTime.now());
         articleEntity.setDraft(articleRequest.getDraft());
+        articleEntity.setImage(articleRequest.getImage());
         articleEntity.setUsers(new HashSet<>());
-        articleEntity.setDraft(articleRequest.getDraft());
         return new ArticleResponse(articleRepository.save(articleEntity), userEntity);
     }
 
