@@ -66,13 +66,13 @@ public class ArticleEntity {
     @Column(name = "draft")
     private Boolean draft;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(name="reaction",
             joinColumns=@JoinColumn (name="articleid"),
             inverseJoinColumns=@JoinColumn(name="userid"))
     private Set<UserEntity> users = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(name="saved_article",
             joinColumns=@JoinColumn (name="articleid"),
             inverseJoinColumns=@JoinColumn(name="userid"))

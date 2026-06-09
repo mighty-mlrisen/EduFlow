@@ -65,18 +65,21 @@ public class ArticleService {
         return new ArticleResponse(articleRepository.save(articleEntity), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public ArticleResponse getArticleById(Long articleId, UserDetailsImpl user) {
         ArticleEntity article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new MyEntityNotFoundException(articleId));
         return new ArticleResponse(article, userService.getUser(user));
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getUserArticle(UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         ArticleResponse articleResponse = new ArticleResponse();
         return articleResponse.getListArticleResponces(articleRepository.findAllByCreatedByOrderByCreatedAtDesc(userEntity), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getArticleByCategoryId(Integer categoryId, UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         if (!categoryRepository.existsById(categoryId)) {
@@ -86,12 +89,21 @@ public class ArticleService {
         return articleResponse.getListArticleResponces((articleRepository.findAllByCategoryIdOrderByCreatedAtDesc(categoryId)), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getArticleByUserId(UserEntity user, UserEntity currentUser) {
         ArticleResponse articleResponse = new ArticleResponse();
         return articleResponse.getListArticleResponces((articleRepository.findAllByCreatedByOrderByCreatedAtDesc(user)), currentUser);
     }
 
+    @Transactional(readOnly = true)
+    public List<ArticleResponse> getArticlesByUserId(Long userId, UserDetailsImpl currentUser) {
+        UserEntity author = userRepository.findById(userId)
+                .orElseThrow(() -> new MyEntityNotFoundException(userId));
+        UserEntity currentUserEntity = userService.getUser(currentUser);
+        return getArticleByUserId(author, currentUserEntity);
+    }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getAllArticle(UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         ArticleResponse articleResponse = new ArticleResponse();
@@ -99,10 +111,12 @@ public class ArticleService {
         return articleResponse.getListArticleResponces((articleRepository.findAll()), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<CategoryEntity> getAllCategories() {
         return categoryRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getUserArticleDrafts(UserDetailsImpl user) {
         ArticleResponse articleResponse = new ArticleResponse();
         UserEntity userEntity = userRepository.findById(user.getId())
@@ -130,6 +144,7 @@ public class ArticleService {
         return new ArticleResponse(article, userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getSubscribtionArticles(UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         return userEntity.getSubscriptions().stream()
@@ -149,6 +164,7 @@ public class ArticleService {
         return new CommentResponse(comment, userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<CommentResponse> getAllComments(Long articleId, UserDetailsImpl user) {
         CommentResponse commentResponse = new CommentResponse();
         UserEntity userEntity = userService.getUser(user);
@@ -156,6 +172,7 @@ public class ArticleService {
                 .orElseThrow(() -> new MyEntityNotFoundException(articleId))), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getSearchArticle(String line, UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         ArticleResponse articleResponse = new ArticleResponse();
@@ -164,6 +181,7 @@ public class ArticleService {
         return articleResponse.getListArticleResponces(articleRepository.findByTitleContainingIgnoreCase(line), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public Integer getCountReactions(Long articleId, UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
         ArticleResponse articleResponse = new ArticleResponse(articleRepository.findById(articleId).orElseThrow(() -> new MyEntityNotFoundException(articleId)), userEntity);

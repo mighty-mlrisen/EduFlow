@@ -83,6 +83,14 @@ public class ArticleController {
         return articleService.getUserArticle(user);
     }
 
+    @Operation(summary = "Get articles by user ID",
+            description = "Get articles by user ID")
+    @GetMapping(value = "/user/article/user/{userId}")
+    @ResponseBody
+    public List<ArticleResponse> getArticlesByUserId(@PathVariable Long userId, @AuthenticationPrincipal UserDetailsImpl user){
+        return articleService.getArticlesByUserId(userId, user);
+    }
+
     @Operation(summary = "Get current user's article's drafts",
             description = "Get current user's article's drafts")
     @GetMapping(value = "/user/article/draft")

@@ -31,10 +31,13 @@ public class UserService {
     @Autowired
     ArticleRepository articleRepository;
 
+    @Transactional(readOnly = true)
     public UserEntity getUser(UserDetailsImpl user) {
         return userRepository.findById(user.getId())
                 .orElseThrow(() -> new MyEntityNotFoundException(user.getId()));
     }
+
+    @Transactional(readOnly = true)
     public ProfileResponse getProfile(UserDetailsImpl user){
         UserEntity userEntity = getUser(user);
         return new ProfileResponse(userEntity, userEntity.getSubscribers().contains(userEntity));
@@ -70,6 +73,7 @@ public class UserService {
         return new ArticleResponse(article, userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ArticleResponse> getSavedArticles(UserDetailsImpl user) {
         ArticleResponse articleResponse = new ArticleResponse();
         UserEntity userEntity = getUser(user);
@@ -100,12 +104,14 @@ public class UserService {
         return new ProfileResponse(publisher, publisher.getSubscribers().contains(currentUser));
     }
 
+    @Transactional(readOnly = true)
     public List<ProfileResponse> getSubscribers(UserDetailsImpl user) {
         ProfileResponse profileResponse = new ProfileResponse();
         UserEntity userEntity = getUser(user);
         return profileResponse.getListProfileResponces(userEntity.getSubscribers().stream().toList(), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ProfileResponse> getSubscribtions(UserDetailsImpl user) {
         ProfileResponse profileResponse = new ProfileResponse();
         UserEntity userEntity = getUser(user);
@@ -114,6 +120,7 @@ public class UserService {
         return profileResponse.getListProfileResponces(userEntity.getSubscriptions().stream().toList(), userEntity);
     }
 
+    @Transactional(readOnly = true)
     public List<ProfileResponse> getUserSubscribtions(UserDetailsImpl user, Long userId) {
         ProfileResponse profileResponse = new ProfileResponse();
         UserEntity userEntity = userRepository.findById(userId)
@@ -122,6 +129,7 @@ public class UserService {
         return profileResponse.getListProfileResponces(userEntity.getSubscriptions().stream().toList(), currentUser);
     }
 
+    @Transactional(readOnly = true)
     public List<ProfileResponse> getUserSubscribers(UserDetailsImpl user, Long userId) {
         ProfileResponse profileResponse = new ProfileResponse();
         UserEntity userEntity = userRepository.findById(userId)
@@ -130,7 +138,7 @@ public class UserService {
         return profileResponse.getListProfileResponces(userEntity.getSubscribers().stream().toList(), currentUser);
     }
 
-
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileById(UserDetailsImpl user, Long userId) {
         UserEntity userEntity = userRepository.findById(userId)
                 .orElseThrow(() -> new MyEntityNotFoundException(userId));

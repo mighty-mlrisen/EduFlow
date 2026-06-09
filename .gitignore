@@ -44,6 +44,13 @@ liquibase/changelog/*.bak
 docker-compose.override.yml
 
 # -----------------------------
+# Environment secrets
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
 # JSON / data files
 # -----------------------------
 # если хочешь хранить данные игроков — оставь data/players.json под версионным контролем

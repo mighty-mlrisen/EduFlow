@@ -71,16 +71,16 @@ public class UserEntity {
     private LocalDateTime createdAt;
 
     @JsonIgnore
-    @OneToMany(mappedBy="createdBy", fetch= FetchType.EAGER, cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy="createdBy", fetch= FetchType.LAZY, cascade = CascadeType.MERGE)
     private Set<ArticleEntity> article;
 
-    @ManyToMany(mappedBy = "users", fetch= FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(mappedBy = "users", fetch= FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<ArticleEntity> articlesReaction;
 
-    @ManyToMany(mappedBy = "savedUsers", fetch= FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(mappedBy = "savedUsers", fetch= FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<ArticleEntity> savedArticles;
 
-    @ManyToMany(fetch= FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(fetch= FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @JoinTable(
             name = "subscribtion",
             joinColumns = { @JoinColumn(name = "publisherid") },
@@ -88,7 +88,7 @@ public class UserEntity {
     )
     private Set<UserEntity> subscribers = new HashSet<>();
 
-    @ManyToMany(mappedBy = "subscribers", fetch= FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @ManyToMany(mappedBy = "subscribers", fetch= FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<UserEntity> subscriptions = new HashSet<>();
 
     public void addSubscriber(UserEntity user) {
