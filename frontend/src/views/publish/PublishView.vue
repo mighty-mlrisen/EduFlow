@@ -5,6 +5,8 @@ import { getArticleById, getMyDrafts, getMyArticles } from '@/api/article.api'
 import type { ArticleResponse } from '@/types/article.types'
 import ArticleEditor from '@/components/editor/ArticleEditor.vue'
 import ArticleCard from '@/components/article/ArticleCard.vue'
+import SortBar from '@/components/article/SortBar.vue'
+import { useArticleSort } from '@/composables/useArticleSort'
 
 const route = useRoute()
 const router = useRouter()
@@ -27,6 +29,8 @@ const drafts = ref<ArticleResponse[]>([])
 const myArticles = ref<ArticleResponse[]>([])
 const loadingList = ref(false)
 const listError = ref<string | null>(null)
+
+const { sortKey: articlesSortKey, sorted: sortedMyArticles } = useArticleSort(myArticles)
 
 // Load article when editing
 watch(editId, async (id) => {
@@ -162,14 +166,17 @@ const editorTabLabel = computed(() =>
           Написать первую статью
         </button>
       </div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div v-else>
+        <SortBar v-model="articlesSortKey" class="mb-5" />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <ArticleCard
-          v-for="article in myArticles"
+          v-for="article in sortedMyArticles"
           :key="article.articleId"
           :article="article"
           :show-edit="true"
           @edit="editArticle"
         />
+        </div>
       </div>
     </template>
 

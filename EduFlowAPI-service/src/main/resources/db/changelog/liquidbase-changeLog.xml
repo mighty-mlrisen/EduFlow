@@ -113,4 +113,14 @@
             )
         </sql>
     </changeSet>
+    <changeSet id="comment-add-createdat" author="artem">
+        <sql>
+            ALTER TABLE comment ADD COLUMN IF NOT EXISTS createdat TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NOW();
+        </sql>
+    </changeSet>
+    <changeSet id="comment-add-parentcommentid" author="artem">
+        <sql>
+            ALTER TABLE comment ADD COLUMN IF NOT EXISTS parentcommentid INTEGER DEFAULT NULL REFERENCES comment(id);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth.store'
 import { getAllArticles } from '@/api/article.api'
 import type { ArticleResponse } from '@/types/article.types'
 import FeedArticleCard from '@/components/article/FeedArticleCard.vue'
+import SortBar from '@/components/article/SortBar.vue'
+import { useArticleSort } from '@/composables/useArticleSort'
 
 const auth = useAuthStore()
 
@@ -14,14 +16,16 @@ const error = ref<string | null>(null)
 const ITEMS_PER_PAGE = 10
 const currentPage = ref(1)
 
+const { sortKey, sorted } = useArticleSort(articles)
+
+watch(sortKey, () => { currentPage.value = 1 })
+
 onMounted(async () => {
   if (!auth.isAuthenticated) return
   loading.value = true
   try {
     const all = await getAllArticles()
-    articles.value = all
-      .filter((a) => !a.draft)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    articles.value = all.filter((a) => !a.draft)
   } catch {
     error.value = 'Не удалось загрузить статьи'
   } finally {
@@ -29,11 +33,11 @@ onMounted(async () => {
   }
 })
 
-const totalPages = computed(() => Math.max(1, Math.ceil(articles.value.length / ITEMS_PER_PAGE)))
+const totalPages = computed(() => Math.max(1, Math.ceil(sorted.value.length / ITEMS_PER_PAGE)))
 
 const paginatedArticles = computed(() => {
   const start = (currentPage.value - 1) * ITEMS_PER_PAGE
-  return articles.value.slice(start, start + ITEMS_PER_PAGE)
+  return sorted.value.slice(start, start + ITEMS_PER_PAGE)
 })
 
 // Smart pagination: first, last, current±1, ellipsis between gaps
@@ -98,7 +102,7 @@ function goToPage(p: number) {
     <template v-else>
       <div class="max-w-3xl mx-auto px-6 py-8">
 
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Все статьи</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Все статьи</h1>
 
         <!-- Loading -->
         <div v-if="loading" class="flex justify-center py-20">
@@ -118,6 +122,7 @@ function goToPage(p: number) {
 
         <!-- Feed -->
         <template v-else>
+          <SortBar v-model="sortKey" class="mb-5" />
           <div>
             <FeedArticleCard
               v-for="article in paginatedArticles"

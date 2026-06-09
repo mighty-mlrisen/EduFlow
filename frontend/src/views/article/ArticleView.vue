@@ -5,6 +5,9 @@ import DOMPurify from 'dompurify'
 import { getArticleById } from '@/api/article.api'
 import type { ArticleResponse } from '@/types/article.types'
 import SaveButton from '@/components/article/SaveButton.vue'
+import LikeButton from '@/components/article/LikeButton.vue'
+import CommentSection from '@/components/article/CommentSection.vue'
+import SubscribeButton from '@/components/user/SubscribeButton.vue'
 
 const props = defineProps<{ articleId: number }>()
 
@@ -41,10 +44,19 @@ const renderedContent = computed(() => {
   })
 })
 
+// Own article — hide subscribe button
+const isOwnArticle = computed(() =>
+  article.value ? article.value.currentUserId === article.value.users?.userId : false
+)
+
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
     year: 'numeric', month: 'long', day: 'numeric'
   })
+}
+
+function scrollToComments() {
+  document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
 }
 </script>
 
@@ -67,19 +79,28 @@ function formatDate(dateStr: string) {
         class="w-full max-h-80 object-cover rounded-2xl mb-8"
       />
 
-      <!-- Title + save -->
+      <!-- Title + actions -->
       <div class="flex items-start gap-3 mb-5">
         <h1 class="text-4xl font-bold text-gray-900 leading-tight flex-1">
           {{ article.title }}
         </h1>
-        <SaveButton
-          :article-id="article.articleId"
-          :saved="article.statusSave"
-          class="mt-2"
-        />
+        <div class="flex items-center gap-1 flex-shrink-0 mt-2">
+          <!-- Scroll to comments -->
+          <button
+            @click="scrollToComments"
+            class="flex items-center justify-center w-12 h-12 rounded-full text-gray-400 hover:text-blue-500 hover:bg-gray-100 transition-colors"
+            title="Перейти к комментариям"
+          >
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </button>
+          <SaveButton :article-id="article.articleId" :saved="article.statusSave" :large="true" />
+        </div>
       </div>
 
-      <!-- Meta -->
+      <!-- Meta: author + date + category + subscribe -->
       <div class="flex flex-wrap items-center gap-3 mb-8 pb-8 border-b border-gray-100">
         <RouterLink :to="`/profile/${article.users?.userId}`" class="flex items-center gap-2">
           <img
@@ -104,10 +125,17 @@ function formatDate(dateStr: string) {
 
         <span
           v-if="article.category"
-          class="ml-auto px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-full"
+          class="px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-600 rounded-full"
         >
           {{ article.category.name }}
         </span>
+
+        <SubscribeButton
+          v-if="!isOwnArticle && article.users"
+          :user-id="article.users.userId"
+          :subscribed="article.users.statusSubscribtion"
+          class="ml-auto"
+        />
       </div>
 
       <!-- Description -->
@@ -117,6 +145,19 @@ function formatDate(dateStr: string) {
 
       <!-- Content -->
       <div class="article-content prose prose-lg prose-gray max-w-none" v-html="renderedContent" />
+
+      <!-- Likes -->
+      <div class="mt-10 pt-6 border-t border-gray-100">
+        <LikeButton
+          :article-id="article.articleId"
+          :liked="article.statusLike"
+          :count="article.likes"
+          :large="true"
+        />
+      </div>
+
+      <!-- Comments -->
+      <CommentSection :article-id="article.articleId" />
 
     </article>
   </div>

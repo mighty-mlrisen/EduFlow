@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ArticleResponse } from '@/types/article.types'
 import SaveButton from './SaveButton.vue'
+import LikeButton from './LikeButton.vue'
 
 defineProps<{ article: ArticleResponse }>()
 
@@ -75,12 +76,21 @@ function formatDate(dateStr: string) {
     <RouterLink
       v-if="article.description"
       :to="`/article/${article.articleId}`"
-      class="block"
+      class="block mb-4"
     >
       <p class="text-base text-gray-500 leading-relaxed line-clamp-3">
         {{ article.description }}
       </p>
     </RouterLink>
+
+    <!-- 5. Likes -->
+    <div class="flex items-center">
+      <LikeButton
+        :article-id="article.articleId"
+        :liked="article.statusLike"
+        :count="article.likes"
+      />
+    </div>
 
   </article>
 </template>

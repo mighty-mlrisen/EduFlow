@@ -29,10 +29,12 @@ export interface ArticleResponse {
   statusSave: boolean
   likes: number
   statusLike: boolean
+  commentsCount: number
 }
 
 export interface CommentRequest {
   comment: string
+  parentCommentId?: number | null
 }
 
 export interface CommentResponse {
@@ -40,4 +42,6 @@ export interface CommentResponse {
   article: ArticleResponse
   author: ProfileResponse
   comment: string
+  createdAt: string | null
+  parentCommentId: number | null
 }

@@ -47,6 +47,18 @@ public class ArticleService {
     @Autowired
     UserService userService;
 
+    private ArticleResponse buildResponse(ArticleEntity article, UserEntity user) {
+        ArticleResponse r = new ArticleResponse(article, user);
+        r.setCommentsCount((int) commentRepository.countByArticle(article));
+        return r;
+    }
+
+    private List<ArticleResponse> buildResponseList(List<ArticleEntity> articles, UserEntity user) {
+        return articles.stream()
+                .map(a -> buildResponse(a, user))
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     @CachePut(value = "articles")
     public ArticleResponse createArticle(ArticleRequest articleRequest, UserDetailsImpl user) {
@@ -62,21 +74,20 @@ public class ArticleService {
         articleEntity.setDraft(articleRequest.getDraft());
         articleEntity.setImage(articleRequest.getImage());
         articleEntity.setUsers(new HashSet<>());
-        return new ArticleResponse(articleRepository.save(articleEntity), userEntity);
+        return buildResponse(articleRepository.save(articleEntity), userEntity);
     }
 
     @Transactional(readOnly = true)
     public ArticleResponse getArticleById(Long articleId, UserDetailsImpl user) {
         ArticleEntity article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new MyEntityNotFoundException(articleId));
-        return new ArticleResponse(article, userService.getUser(user));
+        return buildResponse(article, userService.getUser(user));
     }
 
     @Transactional(readOnly = true)
     public List<ArticleResponse> getUserArticle(UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
-        ArticleResponse articleResponse = new ArticleResponse();
-        return articleResponse.getListArticleResponces(articleRepository.findAllByCreatedByOrderByCreatedAtDesc(userEntity), userEntity);
+        return buildResponseList(articleRepository.findAllByCreatedByOrderByCreatedAtDesc(userEntity), userEntity);
     }
 
     @Transactional(readOnly = true)
@@ -85,14 +96,12 @@ public class ArticleService {
         if (!categoryRepository.existsById(categoryId)) {
             throw new MyEntityNotFoundException(categoryId.longValue());
         }
-        ArticleResponse articleResponse = new ArticleResponse();
-        return articleResponse.getListArticleResponces((articleRepository.findAllByCategoryIdOrderByCreatedAtDesc(categoryId)), userEntity);
+        return buildResponseList(articleRepository.findAllByCategoryIdOrderByCreatedAtDesc(categoryId), userEntity);
     }
 
     @Transactional(readOnly = true)
     public List<ArticleResponse> getArticleByUserId(UserEntity user, UserEntity currentUser) {
-        ArticleResponse articleResponse = new ArticleResponse();
-        return articleResponse.getListArticleResponces((articleRepository.findAllByCreatedByOrderByCreatedAtDesc(user)), currentUser);
+        return buildResponseList(articleRepository.findAllByCreatedByOrderByCreatedAtDesc(user), currentUser);
     }
 
     @Transactional(readOnly = true)
@@ -106,9 +115,7 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public List<ArticleResponse> getAllArticle(UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
-        ArticleResponse articleResponse = new ArticleResponse();
-        System.out.println("cach not working");
-        return articleResponse.getListArticleResponces((articleRepository.findAll()), userEntity);
+        return buildResponseList(articleRepository.findAll(), userEntity);
     }
 
     @Transactional(readOnly = true)
@@ -118,11 +125,10 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public List<ArticleResponse> getUserArticleDrafts(UserDetailsImpl user) {
-        ArticleResponse articleResponse = new ArticleResponse();
         UserEntity userEntity = userRepository.findById(user.getId())
                 .orElseThrow(() -> new MyEntityNotFoundException(user.getId()));
-        return articleResponse.getListArticleResponces(
-                (articleRepository.findAllByCreatedByAndDraftOrderByCreatedAtDesc(userEntity, true)), userEntity);
+        return buildResponseList(
+                articleRepository.findAllByCreatedByAndDraftOrderByCreatedAtDesc(userEntity, true), userEntity);
     }
 
     @Transactional
@@ -141,7 +147,7 @@ public class ArticleService {
             throw new BusinessException("Object already exist or deleted");
         }
         articleRepository.save(article);
-        return new ArticleResponse(article, userEntity);
+        return buildResponse(article, userEntity);
     }
 
     @Transactional(readOnly = true)
@@ -160,6 +166,8 @@ public class ArticleService {
                 .orElseThrow(() -> new MyEntityNotFoundException(articleId)));
         comment.setUser(userEntity);
         comment.setComment(commentRequest.getComment());
+        comment.setCreatedAt(LocalDateTime.now());
+        comment.setParentCommentId(commentRequest.getParentCommentId());
         commentRepository.save(comment);
         return new CommentResponse(comment, userEntity);
     }
@@ -175,10 +183,7 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public List<ArticleResponse> getSearchArticle(String line, UserDetailsImpl user) {
         UserEntity userEntity = userService.getUser(user);
-        ArticleResponse articleResponse = new ArticleResponse();
-        System.out.println(line.toLowerCase());
-        System.out.println(articleRepository.findByTitleContainingIgnoreCase(line));
-        return articleResponse.getListArticleResponces(articleRepository.findByTitleContainingIgnoreCase(line), userEntity);
+        return buildResponseList(articleRepository.findByTitleContainingIgnoreCase(line), userEntity);
     }
 
     @Transactional(readOnly = true)
@@ -200,6 +205,6 @@ public class ArticleService {
         article.setText(articleRequest.getText());
         article.setImage(articleRequest.getImage());
         articleRepository.save(article);
-        return new ArticleResponse(article, userService.getUser(user));
+        return buildResponse(article, userService.getUser(user));
     }
 }

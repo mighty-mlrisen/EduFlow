@@ -16,6 +16,8 @@ public interface CommentRepository extends JpaRepository<CommentEntity, Long> {
     @CachePut("comments")
     List<CommentEntity> findByArticle(ArticleEntity article);
 
+    long countByArticle(ArticleEntity article);
+
     @Caching(
             evict = {
                     @CacheEvict("articlesCreated"),

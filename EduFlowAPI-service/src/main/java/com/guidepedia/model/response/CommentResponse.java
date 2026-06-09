@@ -20,12 +20,16 @@ public class CommentResponse {
     private ArticleResponse article;
     private ProfileResponse author;
     private String comment;
+    private LocalDateTime createdAt;
+    private Long parentCommentId;
 
     public CommentResponse(CommentEntity comment, UserEntity currentUser) {
         this.commentId = comment.getId();
         this.author = new ProfileResponse(comment.getUser(), comment.getUser().getSubscribers().contains(currentUser));
         this.article = new ArticleResponse(comment.getArticle(), currentUser);
         this.comment = comment.getComment();
+        this.createdAt = comment.getCreatedAt();
+        this.parentCommentId = comment.getParentCommentId();
     }
 
     public List<CommentResponse> getListCommentResponces(List<CommentEntity> commentEntities, UserEntity user) {

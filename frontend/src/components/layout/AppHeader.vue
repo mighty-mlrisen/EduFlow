@@ -109,12 +109,12 @@ function logout() {
 
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center gap-4">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center gap-4">
 
       <!-- Логотип -->
       <RouterLink
         to="/"
-        class="text-xl font-bold text-blue-600 hover:text-blue-700 transition-colors tracking-tight flex-shrink-0"
+        class="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors tracking-tight flex-shrink-0"
       >
         EduFlow
       </RouterLink>
@@ -129,7 +129,7 @@ function logout() {
           <div ref="catMenuRef" class="relative">
             <button
               @click="toggleCatMenu"
-              class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-1"
+              class="px-4 py-2 text-base font-medium rounded-lg transition-colors flex items-center gap-1"
               :class="$route.name === 'category'
                 ? 'bg-blue-50 text-blue-600'
                 : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -180,10 +180,21 @@ function logout() {
             </Transition>
           </div>
 
+          <!-- Моя лента -->
+          <RouterLink
+            :to="{ name: 'subscription-feed' }"
+            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
+            :class="$route.name === 'subscription-feed'
+              ? 'bg-blue-50 text-blue-600'
+              : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
+          >
+            Моя лента
+          </RouterLink>
+
           <!-- Публикации -->
           <RouterLink
             :to="{ name: 'publish' }"
-            class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors"
+            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
             :class="$route.name === 'publish'
               ? 'bg-blue-50 text-blue-600'
               : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -194,7 +205,7 @@ function logout() {
           <!-- Избранное -->
           <RouterLink
             :to="{ name: 'saved' }"
-            class="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors"
+            class="px-4 py-2 text-base font-medium rounded-lg transition-colors"
             :class="$route.name === 'saved'
               ? 'bg-blue-50 text-blue-600'
               : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'"
@@ -213,7 +224,7 @@ function logout() {
               v-model="searchQuery"
               type="text"
               placeholder="Статьи, авторы..."
-              class="bg-transparent text-sm text-gray-800 placeholder-gray-400 outline-none w-full"
+              class="bg-transparent text-base text-gray-800 placeholder-gray-400 outline-none w-full"
               @focus="searchOpen = searchQuery.trim().length >= 2"
             />
             <button
@@ -322,13 +333,13 @@ function logout() {
         <template v-if="!auth.isAuthenticated">
           <RouterLink
             to="/login"
-            class="px-4 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+            class="px-4 py-2 text-base font-medium text-gray-700 hover:text-blue-600 transition-colors"
           >
             Войти
           </RouterLink>
           <RouterLink
             to="/register"
-            class="px-4 py-1.5 text-sm font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+            class="px-5 py-2 text-base font-medium bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
           >
             Регистрация
           </RouterLink>
@@ -337,16 +348,16 @@ function logout() {
         <template v-else>
           <RouterLink
             to="/profile"
-            class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 hover:text-blue-600 rounded-lg hover:bg-gray-100 transition-colors"
+            class="flex items-center gap-2 px-3 py-2 text-base font-medium text-gray-700 hover:text-blue-600 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <span class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold uppercase">
+            <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-bold uppercase">
               {{ auth.user?.username?.charAt(0) ?? auth.user?.login?.charAt(0) ?? '?' }}
             </span>
             <span>Профиль</span>
           </RouterLink>
           <button
             @click="logout"
-            class="px-3 py-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
+            class="px-3 py-2 text-base text-gray-500 hover:text-red-500 transition-colors"
           >
             Выйти
           </button>

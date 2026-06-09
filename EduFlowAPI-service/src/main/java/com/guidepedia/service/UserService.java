@@ -11,6 +11,7 @@ import com.guidepedia.model.request.SignUpRequest;
 import com.guidepedia.model.response.ArticleResponse;
 import com.guidepedia.model.response.ProfileResponse;
 import com.guidepedia.repo.ArticleRepository;
+import com.guidepedia.repo.CommentRepository;
 import com.guidepedia.repo.UserRepository;
 import com.guidepedia.security.jwt.JwtUtils;
 import com.guidepedia.security.services.UserDetailsImpl;
@@ -30,6 +31,9 @@ public class UserService {
 
     @Autowired
     ArticleRepository articleRepository;
+
+    @Autowired
+    CommentRepository commentRepository;
 
     @Transactional(readOnly = true)
     public UserEntity getUser(UserDetailsImpl user) {
@@ -54,6 +58,12 @@ public class UserService {
         return new ProfileResponse(userEntity, userEntity.getSubscribers().contains(userEntity));
     }
 
+    private ArticleResponse buildResponse(ArticleEntity article, UserEntity user) {
+        ArticleResponse r = new ArticleResponse(article, user);
+        r.setCommentsCount((int) commentRepository.countByArticle(article));
+        return r;
+    }
+
     @Transactional
     public ArticleResponse changeSaveArticle(Long articleId, Boolean status, UserDetailsImpl user) {
         ArticleEntity article = articleRepository.findById(articleId).orElseThrow(() -> new MyEntityNotFoundException(articleId));
@@ -70,14 +80,15 @@ public class UserService {
             throw new BusinessException("Object already exist or deleted");
         }
         articleRepository.save(article);
-        return new ArticleResponse(article, userEntity);
+        return buildResponse(article, userEntity);
     }
 
     @Transactional(readOnly = true)
     public List<ArticleResponse> getSavedArticles(UserDetailsImpl user) {
-        ArticleResponse articleResponse = new ArticleResponse();
         UserEntity userEntity = getUser(user);
-        return articleResponse.getListArticleResponces(userEntity.getSavedArticles().stream().toList(), userEntity);
+        return userEntity.getSavedArticles().stream()
+                .map(a -> buildResponse(a, userEntity))
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional

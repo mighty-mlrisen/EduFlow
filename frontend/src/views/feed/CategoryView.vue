@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { getArticlesByCategory, getCategories } from '@/api/article.api'
 import type { ArticleResponse, CategoryEntity } from '@/types/article.types'
 import FeedArticleCard from '@/components/article/FeedArticleCard.vue'
+import SortBar from '@/components/article/SortBar.vue'
+import { useArticleSort } from '@/composables/useArticleSort'
 
 const props = defineProps<{ categoryId: number }>()
 
@@ -13,6 +15,10 @@ const error = ref<string | null>(null)
 
 const ITEMS_PER_PAGE = 10
 const currentPage = ref(1)
+
+const { sortKey, sorted } = useArticleSort(articles)
+
+watch(sortKey, () => { currentPage.value = 1 })
 
 async function load(id: number) {
   loading.value = true
@@ -27,9 +33,7 @@ async function load(id: number) {
     ])
     const cat = cats.find((c: CategoryEntity) => c.id === id)
     categoryName.value = cat?.name ?? ''
-    articles.value = data
-      .filter((a) => !a.draft)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    articles.value = data.filter((a) => !a.draft)
   } catch {
     error.value = 'Не удалось загрузить статьи'
   } finally {
@@ -40,11 +44,11 @@ async function load(id: number) {
 onMounted(() => load(props.categoryId))
 watch(() => props.categoryId, (id) => load(id))
 
-const totalPages = computed(() => Math.max(1, Math.ceil(articles.value.length / ITEMS_PER_PAGE)))
+const totalPages = computed(() => Math.max(1, Math.ceil(sorted.value.length / ITEMS_PER_PAGE)))
 
 const paginatedArticles = computed(() => {
   const start = (currentPage.value - 1) * ITEMS_PER_PAGE
-  return articles.value.slice(start, start + ITEMS_PER_PAGE)
+  return sorted.value.slice(start, start + ITEMS_PER_PAGE)
 })
 
 const visiblePages = computed<(number | '...')[]>(() => {
@@ -91,6 +95,7 @@ function goToPage(p: number) {
 
     <!-- Feed -->
     <template v-else>
+      <SortBar v-model="sortKey" class="mb-5" />
       <div>
         <FeedArticleCard
           v-for="article in paginatedArticles"

@@ -1,6 +1,5 @@
 package com.guidepedia.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,12 +9,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.time.LocalDateTime;
 
 
 @Getter
@@ -38,4 +37,10 @@ public class CommentEntity {
 
     @Column(name = "comment")
     private String comment;
+
+    @Column(name = "createdat")
+    private LocalDateTime createdAt;
+
+    @Column(name = "parentcommentid")
+    private Long parentCommentId;
 }

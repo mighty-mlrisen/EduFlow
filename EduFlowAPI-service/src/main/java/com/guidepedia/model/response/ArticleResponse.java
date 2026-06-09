@@ -32,6 +32,7 @@ public class ArticleResponse {
     private Boolean statusSave;
     private Integer likes;
     private Boolean statusLike;
+    private Integer commentsCount = 0;
 
     public ArticleResponse(ArticleEntity article, UserEntity currentUser) {
         this.currentUserId = currentUser.getId();

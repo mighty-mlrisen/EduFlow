@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useUserStore } from '@/stores/user.store'
+import { getMySubscriptions, getMySubscribers } from '@/api/user.api'
+import { getMyArticles } from '@/api/article.api'
+import type { ProfileResponse } from '@/types/user.types'
+import type { ArticleResponse } from '@/types/article.types'
+import FeedArticleCard from '@/components/article/FeedArticleCard.vue'
+import SortBar from '@/components/article/SortBar.vue'
+import UserCard from '@/components/user/UserCard.vue'
+import { useArticleSort } from '@/composables/useArticleSort'
 
 const userStore = useUserStore()
 
@@ -16,11 +24,99 @@ const form = reactive({
   cardDetails: ''
 })
 
-onMounted(() => {
+// Tabs
+type Tab = 'articles' | 'subscriptions' | 'followers'
+const activeTab = ref<Tab>('articles')
+
+// Data
+const subscriptions = ref<ProfileResponse[]>([])
+const followers = ref<ProfileResponse[]>([])
+const articles = ref<ArticleResponse[]>([])
+const tabDataLoading = ref(false)
+
+const searchQuery = ref('')
+
+const { sortKey, sorted: sortedArticles } = useArticleSort(articles)
+
+const filteredArticles = computed(() => {
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return sortedArticles.value
+  return sortedArticles.value.filter(
+    (a) =>
+      a.title.toLowerCase().includes(q) ||
+      (a.description?.toLowerCase() ?? '').includes(q)
+  )
+})
+
+const filteredSubscriptions = computed(() => {
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return subscriptions.value
+  return subscriptions.value.filter(
+    (u) =>
+      (u.username?.toLowerCase() ?? '').includes(q) ||
+      u.login.toLowerCase().includes(q)
+  )
+})
+
+const filteredFollowers = computed(() => {
+  const q = searchQuery.value.toLowerCase().trim()
+  if (!q) return followers.value
+  return followers.value.filter(
+    (u) =>
+      (u.username?.toLowerCase() ?? '').includes(q) ||
+      u.login.toLowerCase().includes(q)
+  )
+})
+
+// Pagination
+const ITEMS_PER_PAGE = 10
+const currentPage = ref(1)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredArticles.value.length / ITEMS_PER_PAGE)))
+
+const paginatedArticles = computed(() => {
+  const start = (currentPage.value - 1) * ITEMS_PER_PAGE
+  return filteredArticles.value.slice(start, start + ITEMS_PER_PAGE)
+})
+
+const visiblePages = computed<(number | '...')[]>(() => {
+  const total = totalPages.value
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const cur = currentPage.value
+  const pages: (number | '...')[] = [1]
+  if (cur > 3) pages.push('...')
+  const from = Math.max(2, cur - 1)
+  const to = Math.min(total - 1, cur + 1)
+  for (let i = from; i <= to; i++) pages.push(i)
+  if (cur < total - 2) pages.push('...')
+  pages.push(total)
+  return pages
+})
+
+watch([sortKey, searchQuery], () => { currentPage.value = 1 })
+
+function goToPage(p: number) {
+  currentPage.value = p
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+onMounted(async () => {
+  tabDataLoading.value = true
+  try {
+    const [arts, subs, sbrs] = await Promise.all([
+      getMyArticles(),
+      getMySubscriptions(),
+      getMySubscribers()
+    ])
+    articles.value = arts.filter((a) => !a.draft)
+    subscriptions.value = subs
+    followers.value = sbrs
+  } catch {}
+  finally { tabDataLoading.value = false }
+
   userStore.fetchMyProfile()
 })
 
-// Когда профиль загрузится — заполняем форму
 const profile = computed(() => userStore.myProfile)
 
 function startEditing() {
@@ -64,7 +160,12 @@ async function handleSave() {
   }
 }
 
-// Инициалы для аватара-заглушки
+function setTab(tab: Tab) {
+  activeTab.value = tab
+  searchQuery.value = ''
+  currentPage.value = 1
+}
+
 const initials = computed(() => {
   const name = profile.value?.username || profile.value?.login || '?'
   return name.charAt(0).toUpperCase()
@@ -82,9 +183,9 @@ function roleLabel(_role: string) {
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto px-6 py-10">
+  <div class="max-w-3xl mx-auto px-6 py-10">
 
-    <!-- Загрузка -->
+    <!-- Загрузка профиля -->
     <div v-if="userStore.loading && !profile" class="flex justify-center py-20">
       <div class="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
     </div>
@@ -98,7 +199,7 @@ function roleLabel(_role: string) {
     <div v-else-if="profile">
 
       <!-- Шапка профиля -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-4">
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
         <div class="flex items-start gap-5">
 
           <!-- Аватар -->
@@ -123,6 +224,16 @@ function roleLabel(_role: string) {
               {{ profile.username || 'Без имени' }}
             </h1>
             <p class="text-sm text-gray-400 mt-0.5">{{ profile.login }}</p>
+
+            <!-- Counts -->
+            <div class="flex items-center gap-5 mt-3">
+              <div class="text-sm text-gray-500">
+                <span class="font-semibold text-gray-800">{{ subscriptions.length }}</span> подписок
+              </div>
+              <div class="text-sm text-gray-500">
+                <span class="font-semibold text-gray-800">{{ followers.length }}</span> подписчиков
+              </div>
+            </div>
 
             <div class="flex flex-wrap gap-2 mt-2">
               <span class="px-2.5 py-0.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-full">
@@ -249,17 +360,159 @@ function roleLabel(_role: string) {
         </form>
       </div>
 
-      <!-- Уведомление об успехе -->
-      <Transition name="fade">
-        <div
-          v-if="saveSuccess"
-          class="fixed bottom-6 right-6 bg-green-600 text-white text-sm px-4 py-2 rounded-lg shadow-lg"
+      <!-- Tab switcher -->
+      <div class="flex border-b border-gray-200 mb-6">
+        <button
+          @click="setTab('articles')"
+          class="px-5 py-3 text-base font-medium border-b-2 transition-colors -mb-px"
+          :class="activeTab === 'articles'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-800'"
         >
-          Профиль обновлён
-        </div>
-      </Transition>
+          Мои статьи
+          <span class="ml-1 text-sm" :class="activeTab === 'articles' ? 'text-blue-400' : 'text-gray-400'">
+            {{ articles.length }}
+          </span>
+        </button>
+        <button
+          @click="setTab('subscriptions')"
+          class="px-5 py-3 text-base font-medium border-b-2 transition-colors -mb-px"
+          :class="activeTab === 'subscriptions'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-800'"
+        >
+          Подписки
+          <span class="ml-1 text-sm" :class="activeTab === 'subscriptions' ? 'text-blue-400' : 'text-gray-400'">
+            {{ subscriptions.length }}
+          </span>
+        </button>
+        <button
+          @click="setTab('followers')"
+          class="px-5 py-3 text-base font-medium border-b-2 transition-colors -mb-px"
+          :class="activeTab === 'followers'
+            ? 'border-blue-600 text-blue-600'
+            : 'border-transparent text-gray-500 hover:text-gray-800'"
+        >
+          Фолловеры
+          <span class="ml-1 text-sm" :class="activeTab === 'followers' ? 'text-blue-400' : 'text-gray-400'">
+            {{ followers.length }}
+          </span>
+        </button>
+      </div>
 
+      <!-- Search bar (always shown once profile loaded) -->
+      <div class="relative mb-4">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+        </svg>
+        <input
+          v-model="searchQuery"
+          type="text"
+          :placeholder="activeTab === 'articles' ? 'Поиск по статьям...' : 'Поиск по пользователям...'"
+          class="w-full pl-9 pr-4 py-2.5 text-sm bg-gray-100 border border-transparent rounded-xl outline-none focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+        />
+      </div>
+
+      <!-- Loading tab data -->
+      <div v-if="tabDataLoading" class="flex justify-center py-10">
+        <div class="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+
+      <template v-else>
+
+        <!-- Мои статьи -->
+        <template v-if="activeTab === 'articles'">
+          <SortBar v-model="sortKey" class="mb-5" />
+          <p v-if="filteredArticles.length === 0" class="text-gray-400 py-10 text-center">
+            {{ articles.length === 0 ? 'Нет опубликованных статей' : 'Ничего не найдено' }}
+          </p>
+          <template v-else>
+            <div>
+              <FeedArticleCard
+                v-for="article in paginatedArticles"
+                :key="article.articleId"
+                :article="article"
+              />
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="totalPages > 1" class="flex items-center justify-center gap-1 mt-10">
+              <button
+                @click="goToPage(currentPage - 1)"
+                :disabled="currentPage === 1"
+                class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <template v-for="(p, i) in visiblePages" :key="i">
+                <span v-if="p === '...'" class="w-9 h-9 flex items-center justify-center text-sm text-gray-400">…</span>
+                <button
+                  v-else
+                  @click="goToPage(p as number)"
+                  class="w-9 h-9 rounded-lg text-sm font-medium transition-colors"
+                  :class="p === currentPage ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'"
+                >
+                  {{ p }}
+                </button>
+              </template>
+              <button
+                @click="goToPage(currentPage + 1)"
+                :disabled="currentPage === totalPages"
+                class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </template>
+        </template>
+
+        <!-- Подписки -->
+        <template v-if="activeTab === 'subscriptions'">
+          <p v-if="filteredSubscriptions.length === 0" class="text-gray-400 py-10 text-center">
+            {{ subscriptions.length === 0 ? 'Нет подписок' : 'Ничего не найдено' }}
+          </p>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <UserCard
+              v-for="user in filteredSubscriptions"
+              :key="user.userId"
+              :profile="user"
+            />
+          </div>
+        </template>
+
+        <!-- Фолловеры -->
+        <template v-if="activeTab === 'followers'">
+          <p v-if="filteredFollowers.length === 0" class="text-gray-400 py-10 text-center">
+            {{ followers.length === 0 ? 'Нет подписчиков' : 'Ничего не найдено' }}
+          </p>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <UserCard
+              v-for="user in filteredFollowers"
+              :key="user.userId"
+              :profile="user"
+            />
+          </div>
+        </template>
+
+      </template>
     </div>
+
+    <!-- Уведомление об успехе -->
+    <Transition name="fade">
+      <div
+        v-if="saveSuccess"
+        class="fixed bottom-6 right-6 bg-green-600 text-white text-sm px-4 py-2 rounded-lg shadow-lg"
+      >
+        Профиль обновлён
+      </div>
+    </Transition>
+
   </div>
 </template>
 

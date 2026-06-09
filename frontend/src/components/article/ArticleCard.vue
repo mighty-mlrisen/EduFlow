@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ArticleResponse } from '@/types/article.types'
 import SaveButton from './SaveButton.vue'
+import LikeButton from './LikeButton.vue'
 
 defineProps<{
   article: ArticleResponse
@@ -72,14 +73,23 @@ function onImgError(e: Event) {
       </h3>
 
       <!-- Description -->
-      <p v-if="article.description" class="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-4">
+      <p v-if="article.description" class="text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3">
         {{ article.description }}
       </p>
 
       <div class="flex-1" />
 
+      <!-- Likes (not for drafts) -->
+      <div v-if="!isDraft" class="mb-3">
+        <LikeButton
+          :article-id="article.articleId"
+          :liked="article.statusLike"
+          :count="article.likes"
+        />
+      </div>
+
       <!-- Author + date + save -->
-      <div class="flex items-center justify-between mt-3">
+      <div class="flex items-center justify-between pt-3 border-t border-gray-50">
         <RouterLink
           :to="`/profile/${article.users?.userId}`"
           class="flex items-center gap-2 min-w-0"

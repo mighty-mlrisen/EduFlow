@@ -3,10 +3,14 @@ import { ref, onMounted } from 'vue'
 import { getSavedArticles } from '@/api/user.api'
 import type { ArticleResponse } from '@/types/article.types'
 import ArticleCard from '@/components/article/ArticleCard.vue'
+import SortBar from '@/components/article/SortBar.vue'
+import { useArticleSort } from '@/composables/useArticleSort'
 
 const articles = ref<ArticleResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+const { sortKey, sorted } = useArticleSort(articles)
 
 onMounted(async () => {
   loading.value = true
@@ -50,13 +54,16 @@ function onUnsaved(articleId: number) {
     </div>
 
     <!-- Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div v-else>
+      <SortBar v-model="sortKey" class="mb-5" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <ArticleCard
-        v-for="article in articles"
+        v-for="article in sorted"
         :key="article.articleId"
         :article="article"
         @save-change="(saved: boolean) => { if (!saved) onUnsaved(article.articleId) }"
       />
+      </div>
     </div>
 
   </div>
