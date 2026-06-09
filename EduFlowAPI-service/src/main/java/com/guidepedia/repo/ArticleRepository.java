@@ -34,6 +34,17 @@ public interface ArticleRepository extends JpaRepository<ArticleEntity, Long> {
             })
     ArticleEntity save(ArticleEntity article);
 
+    @Caching(
+            evict = {
+                    @CacheEvict("articlesCreated"),
+                    @CacheEvict("articlesCategory"),
+                    @CacheEvict("articles"),
+                    @CacheEvict("article"),
+                    @CacheEvict("articlesearch"),
+                    @CacheEvict("comments")
+            })
+    void deleteById(Long id);
+
     @CachePut("article")
     Optional<ArticleEntity> findById(Long id);
 

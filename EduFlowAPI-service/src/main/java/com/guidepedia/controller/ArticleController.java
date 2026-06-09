@@ -18,7 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -157,6 +159,14 @@ public class ArticleController {
     @Cacheable("comments")
     public List<CommentResponse> getAllComments(@PathVariable Long articleId, @AuthenticationPrincipal UserDetailsImpl user){
         return articleService.getAllComments(articleId, user);
+    }
+
+    @Operation(summary = "Delete article",
+            description = "Delete article by id (only author)")
+    @DeleteMapping(value = "/user/article/{articleId}")
+    public ResponseEntity<Void> deleteArticle(@PathVariable Long articleId, @AuthenticationPrincipal UserDetailsImpl user) {
+        articleService.deleteArticle(articleId, user);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get article by word",

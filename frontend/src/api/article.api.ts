@@ -44,6 +44,10 @@ export function updateArticle(articleId: number, payload: ArticleRequest): Promi
   return api.put<ArticleResponse>(`/user/article/${articleId}`, payload, { params: { articleId } }).then((r) => r.data)
 }
 
+export function deleteArticle(articleId: number): Promise<void> {
+  return api.delete(`/user/article/${articleId}`).then(() => {})
+}
+
 // --- Категории ---
 
 export function getCategories(): Promise<CategoryEntity[]> {

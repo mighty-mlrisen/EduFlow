@@ -19,6 +19,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'articles', label: 'Мои статьи' }
 ]
 
+const PER_PAGE = 10
+
 const activeTab = computed<Tab>(() => (route.query.tab as Tab) || 'editor')
 const editId = computed(() => route.query.id ? Number(route.query.id) : null)
 
@@ -31,6 +33,37 @@ const loadingList = ref(false)
 const listError = ref<string | null>(null)
 
 const { sortKey: articlesSortKey, sorted: sortedMyArticles } = useArticleSort(myArticles)
+
+// Pagination — drafts
+const draftsPage = ref(1)
+const draftsTotalPages = computed(() => Math.max(1, Math.ceil(drafts.value.length / PER_PAGE)))
+const paginatedDrafts = computed(() => {
+  const start = (draftsPage.value - 1) * PER_PAGE
+  return drafts.value.slice(start, start + PER_PAGE)
+})
+
+// Pagination — my articles
+const articlesPage = ref(1)
+const articlesTotalPages = computed(() => Math.max(1, Math.ceil(sortedMyArticles.value.length / PER_PAGE)))
+const paginatedMyArticles = computed(() => {
+  const start = (articlesPage.value - 1) * PER_PAGE
+  return sortedMyArticles.value.slice(start, start + PER_PAGE)
+})
+
+function smartPages(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | '…')[] = [1]
+  if (current > 3) pages.push('…')
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p)
+  if (current < total - 2) pages.push('…')
+  pages.push(total)
+  return pages
+}
+
+watch([articlesSortKey], () => { articlesPage.value = 1 })
+watch(activeTab, () => { draftsPage.value = 1; articlesPage.value = 1 })
+watch(draftsPage, () => { window.scrollTo({ top: 0, behavior: 'smooth' }) })
+watch(articlesPage, () => { window.scrollTo({ top: 0, behavior: 'smooth' }) })
 
 // Load article when editing
 watch(editId, async (id) => {
@@ -88,6 +121,16 @@ function editArticle(id: number) {
   router.push({ name: 'publish', query: { tab: 'editor', id: String(id) } })
 }
 
+function onDraftDeleted(id: number) {
+  drafts.value = drafts.value.filter((a) => a.articleId !== id)
+  if (draftsPage.value > draftsTotalPages.value) draftsPage.value = draftsTotalPages.value
+}
+
+function onArticleDeleted(id: number) {
+  myArticles.value = myArticles.value.filter((a) => a.articleId !== id)
+  if (articlesPage.value > articlesTotalPages.value) articlesPage.value = articlesTotalPages.value
+}
+
 const editorTabLabel = computed(() =>
   editId.value ? 'Редактировать' : 'Опубликовать статью'
 )
@@ -139,14 +182,41 @@ const editorTabLabel = computed(() =>
           Написать статью
         </button>
       </div>
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <ArticleCard
-          v-for="article in drafts"
-          :key="article.articleId"
-          :article="article"
-          :is-draft="true"
-          @edit="editArticle"
-        />
+      <div v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <ArticleCard
+            v-for="article in paginatedDrafts"
+            :key="article.articleId"
+            :article="article"
+            :is-draft="true"
+            @edit="editArticle"
+            @delete="onDraftDeleted"
+          />
+        </div>
+        <!-- Drafts pagination -->
+        <div v-if="draftsTotalPages > 1" class="flex items-center justify-center gap-1 mt-4">
+          <button
+            :disabled="draftsPage === 1"
+            @click="draftsPage--"
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >←</button>
+          <template v-for="p in smartPages(draftsPage, draftsTotalPages)" :key="String(p)">
+            <span v-if="p === '…'" class="px-2 text-gray-400 text-sm select-none">…</span>
+            <button
+              v-else
+              @click="draftsPage = p as number"
+              class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              :class="draftsPage === p
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
+            >{{ p }}</button>
+          </template>
+          <button
+            :disabled="draftsPage === draftsTotalPages"
+            @click="draftsPage++"
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >→</button>
+        </div>
       </div>
     </template>
 
@@ -168,14 +238,39 @@ const editorTabLabel = computed(() =>
       </div>
       <div v-else>
         <SortBar v-model="articlesSortKey" class="mb-5" />
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <ArticleCard
-          v-for="article in sortedMyArticles"
-          :key="article.articleId"
-          :article="article"
-          :show-edit="true"
-          @edit="editArticle"
-        />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+          <ArticleCard
+            v-for="article in paginatedMyArticles"
+            :key="article.articleId"
+            :article="article"
+            :show-edit="true"
+            @edit="editArticle"
+            @delete="onArticleDeleted"
+          />
+        </div>
+        <!-- Articles pagination -->
+        <div v-if="articlesTotalPages > 1" class="flex items-center justify-center gap-1 mt-4">
+          <button
+            :disabled="articlesPage === 1"
+            @click="articlesPage--"
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >←</button>
+          <template v-for="p in smartPages(articlesPage, articlesTotalPages)" :key="String(p)">
+            <span v-if="p === '…'" class="px-2 text-gray-400 text-sm select-none">…</span>
+            <button
+              v-else
+              @click="articlesPage = p as number"
+              class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              :class="articlesPage === p
+                ? 'bg-blue-600 text-white border-blue-600'
+                : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
+            >{{ p }}</button>
+          </template>
+          <button
+            :disabled="articlesPage === articlesTotalPages"
+            @click="articlesPage++"
+            class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >→</button>
         </div>
       </div>
     </template>

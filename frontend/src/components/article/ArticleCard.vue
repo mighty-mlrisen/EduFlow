@@ -1,18 +1,38 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { ArticleResponse } from '@/types/article.types'
+import { deleteArticle } from '@/api/article.api'
 import SaveButton from './SaveButton.vue'
 import LikeButton from './LikeButton.vue'
 
-defineProps<{
+const props = defineProps<{
   article: ArticleResponse
   isDraft?: boolean
   showEdit?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'edit', id: number): void
   (e: 'save-change', saved: boolean): void
+  (e: 'delete', id: number): void
 }>()
+
+const confirmingDelete = ref(false)
+const deleting = ref(false)
+
+function askDelete() { confirmingDelete.value = true }
+function cancelDelete() { confirmingDelete.value = false }
+
+async function confirmDelete() {
+  deleting.value = true
+  try {
+    await deleteArticle(props.article.articleId)
+    emit('delete', props.article.articleId)
+  } catch {
+    deleting.value = false
+    confirmingDelete.value = false
+  }
+}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', {
@@ -125,7 +145,7 @@ function onImgError(e: Event) {
       <!-- Edit / draft actions -->
       <div v-if="isDraft || showEdit" class="flex items-center gap-2 mt-4 pt-4 border-t border-gray-100">
         <button
-          @click="$emit('edit', article.articleId)"
+          @click="emit('edit', article.articleId)"
           class="flex-1 py-1.5 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
         >
           Редактировать
@@ -140,7 +160,52 @@ function onImgError(e: Event) {
         <span v-if="isDraft" class="px-2.5 py-1 text-xs font-medium text-amber-600 bg-amber-50 rounded-lg">
           Черновик
         </span>
+        <button
+          @click="askDelete"
+          class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+          title="Удалить"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
       </div>
+
+      <!-- Confirm delete dialog -->
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div
+          v-if="confirmingDelete"
+          class="mt-3 p-3 bg-red-50 border border-red-100 rounded-xl"
+        >
+          <p class="text-sm text-red-700 font-medium mb-3">
+            {{ isDraft ? 'Удалить черновик?' : 'Удалить статью?' }} Это действие необратимо.
+          </p>
+          <div class="flex gap-2">
+            <button
+              @click="cancelDelete"
+              :disabled="deleting"
+              class="flex-1 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-white transition-colors disabled:opacity-50"
+            >
+              Отмена
+            </button>
+            <button
+              @click="confirmDelete"
+              :disabled="deleting"
+              class="flex-1 py-1.5 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+            >
+              {{ deleting ? 'Удаление...' : 'Удалить' }}
+            </button>
+          </div>
+        </div>
+      </Transition>
 
     </div>
   </div>

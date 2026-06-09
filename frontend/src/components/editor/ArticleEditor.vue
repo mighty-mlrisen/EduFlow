@@ -14,6 +14,7 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
 import TableHeader from '@tiptap/extension-table-header'
+import TextAlign from '@tiptap/extension-text-align'
 import { Markdown } from 'tiptap-markdown'
 import { createArticle, updateArticle, getCategories } from '@/api/article.api'
 import { uploadImage } from '@/services/storage.service'
@@ -148,6 +149,7 @@ const editor = useEditor({
     TableHeader,
     TableCell,
     Placeholder.configure({ placeholder: 'Напишите что-нибудь...' }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
     Markdown.configure({ html: true, tightLists: true, breaks: true, transformPastedText: true })
   ],
   content: '',
@@ -455,6 +457,34 @@ async function save(draft: boolean) {
                 class="toolbar-btn text-gray-600 hover:bg-gray-100" title="Повторить">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 000 16h10m0-16l-4-4m4 4l-4 4"/>
+          </svg>
+        </button>
+
+        <div class="w-px h-5 bg-gray-200 mx-1" />
+
+        <!-- Text alignment -->
+        <button @click="editor?.chain().focus().setTextAlign('left').run()"
+                :class="['toolbar-btn', btnCls('textAlign', { textAlign: 'left' })]" title="По левому краю">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h10M4 14h16M4 18h10"/>
+          </svg>
+        </button>
+        <button @click="editor?.chain().focus().setTextAlign('center').run()"
+                :class="['toolbar-btn', btnCls('textAlign', { textAlign: 'center' })]" title="По центру">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 10h10M4 14h16M7 18h10"/>
+          </svg>
+        </button>
+        <button @click="editor?.chain().focus().setTextAlign('right').run()"
+                :class="['toolbar-btn', btnCls('textAlign', { textAlign: 'right' })]" title="По правому краю">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 10h10M4 14h16M10 18h10"/>
+          </svg>
+        </button>
+        <button @click="editor?.chain().focus().setTextAlign('justify').run()"
+                :class="['toolbar-btn', btnCls('textAlign', { textAlign: 'justify' })]" title="По ширине">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
           </svg>
         </button>
       </div>

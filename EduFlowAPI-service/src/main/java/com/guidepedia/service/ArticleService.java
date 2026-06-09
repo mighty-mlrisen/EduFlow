@@ -194,6 +194,17 @@ public class ArticleService {
     }
 
     @Transactional
+    public void deleteArticle(Long articleId, UserDetailsImpl user) {
+        ArticleEntity article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new MyEntityNotFoundException(articleId));
+        UserEntity userEntity = userService.getUser(user);
+        if (!article.getCreatedBy().getId().equals(userEntity.getId())) {
+            throw new BusinessException("Access denied: not the author");
+        }
+        articleRepository.deleteById(articleId);
+    }
+
+    @Transactional
     public ArticleResponse updateArticle(ArticleRequest articleRequest, UserDetailsImpl user, Long articleId) {
         ArticleEntity article = articleRepository.findById(articleId)
                 .orElseThrow(() -> new MyEntityNotFoundException(articleId));

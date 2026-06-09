@@ -1,16 +1,38 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { getSavedArticles } from '@/api/user.api'
 import type { ArticleResponse } from '@/types/article.types'
 import ArticleCard from '@/components/article/ArticleCard.vue'
 import SortBar from '@/components/article/SortBar.vue'
 import { useArticleSort } from '@/composables/useArticleSort'
 
+const PER_PAGE = 10
+
 const articles = ref<ArticleResponse[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 
 const { sortKey, sorted } = useArticleSort(articles)
+
+const currentPage = ref(1)
+const totalPages = computed(() => Math.max(1, Math.ceil(sorted.value.length / PER_PAGE)))
+const paginatedArticles = computed(() => {
+  const start = (currentPage.value - 1) * PER_PAGE
+  return sorted.value.slice(start, start + PER_PAGE)
+})
+
+watch(sortKey, () => { currentPage.value = 1 })
+watch(currentPage, () => { window.scrollTo({ top: 0, behavior: 'smooth' }) })
+
+function smartPages(current: number, total: number): (number | '…')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | '…')[] = [1]
+  if (current > 3) pages.push('…')
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) pages.push(p)
+  if (current < total - 2) pages.push('…')
+  pages.push(total)
+  return pages
+}
 
 onMounted(async () => {
   loading.value = true
@@ -25,6 +47,7 @@ onMounted(async () => {
 
 function onUnsaved(articleId: number) {
   articles.value = articles.value.filter((a) => a.articleId !== articleId)
+  if (currentPage.value > totalPages.value) currentPage.value = totalPages.value
 }
 </script>
 
@@ -53,16 +76,40 @@ function onUnsaved(articleId: number) {
       </RouterLink>
     </div>
 
-    <!-- Grid -->
+    <!-- Grid + pagination -->
     <div v-else>
       <SortBar v-model="sortKey" class="mb-5" />
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      <ArticleCard
-        v-for="article in sorted"
-        :key="article.articleId"
-        :article="article"
-        @save-change="(saved: boolean) => { if (!saved) onUnsaved(article.articleId) }"
-      />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        <ArticleCard
+          v-for="article in paginatedArticles"
+          :key="article.articleId"
+          :article="article"
+          @save-change="(saved: boolean) => { if (!saved) onUnsaved(article.articleId) }"
+        />
+      </div>
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-center gap-1 mt-4">
+        <button
+          :disabled="currentPage === 1"
+          @click="currentPage--"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >←</button>
+        <template v-for="p in smartPages(currentPage, totalPages)" :key="String(p)">
+          <span v-if="p === '…'" class="px-2 text-gray-400 text-sm select-none">…</span>
+          <button
+            v-else
+            @click="currentPage = p as number"
+            class="px-3 py-1.5 text-sm rounded-lg border transition-colors"
+            :class="currentPage === p
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
+          >{{ p }}</button>
+        </template>
+        <button
+          :disabled="currentPage === totalPages"
+          @click="currentPage++"
+          class="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >→</button>
       </div>
     </div>
 
