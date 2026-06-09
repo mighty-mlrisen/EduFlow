@@ -47,3 +47,7 @@ export function toggleSaveArticle(articleId: number, status: boolean): Promise<A
 export function getSavedArticles(): Promise<ArticleResponse[]> {
   return api.get<ArticleResponse[]>('/user/saved/articles').then((r) => r.data)
 }
+
+export function searchUsers(query: string): Promise<ProfileResponse[]> {
+  return api.get<ProfileResponse[]>('/user/search', { params: { username: query } }).then((r) => r.data)
+}

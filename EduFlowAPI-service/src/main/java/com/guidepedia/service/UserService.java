@@ -145,4 +145,12 @@ public class UserService {
         UserEntity currentUser = getUser(user);
         return new ProfileResponse(userEntity, userEntity.getSubscribers().contains(currentUser));
     }
+
+    @Transactional(readOnly = true)
+    public List<ProfileResponse> searchByUsername(String username, UserDetailsImpl user) {
+        UserEntity currentUser = getUser(user);
+        ProfileResponse profileResponse = new ProfileResponse();
+        return profileResponse.getListProfileResponces(
+                userRepository.findByUsernameContainingIgnoreCase(username), currentUser);
+    }
 }

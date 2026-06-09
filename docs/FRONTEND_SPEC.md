@@ -310,6 +310,20 @@ Authorization: Bearer <accessToken>
 
 ---
 
+### GET /user/search?username={query} — Поиск пользователей по имени
+
+**Query params:**
+
+| Параметр | Тип | Описание |
+|---|---|---|
+| `username` | `String` | Строка поиска по полю `username` (регистронезависимый contains) |
+
+**Response `200 OK`:** → `List<ProfileResponse>`
+
+> `statusSubscribtion` в каждом профиле отражает, подписан ли **текущий** пользователь на найденного.
+
+---
+
 ### GET /user/profile/{userId} — Профиль по ID
 
 **Path params:**
@@ -733,6 +747,7 @@ async function request(config) {
 | `POST` | `/auth/refreshtoken` | Нет | Обновление токена |
 | `GET` | `/user/profile` | Да | Мой профиль |
 | `GET` | `/user/profile/{userId}` | Да | Профиль по ID |
+| `GET` | `/user/search?username=` | Да | Поиск пользователей по username |
 | `PUT` | `/user/profile` | Да | Обновить профиль |
 | `POST` | `/user/subscribtion/{userId}?status=` | Да | Подписаться/отписаться |
 | `GET` | `/user/subscribtion` | Да | Мои подписки |

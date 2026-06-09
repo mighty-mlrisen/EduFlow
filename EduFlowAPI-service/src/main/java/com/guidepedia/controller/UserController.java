@@ -124,5 +124,12 @@ public class UserController {
         return userService.getUserSubscribers(user, userId);
     }
 
+    @Operation(summary = "Search users by username",
+            description = "Search users by username (case-insensitive contains)")
+    @GetMapping("/user/search")
+    public List<ProfileResponse> searchUsers(@RequestParam("username") String username,
+                                             @AuthenticationPrincipal UserDetailsImpl user) {
+        return userService.searchByUsername(username, user);
+    }
 
 }

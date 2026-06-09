@@ -4,6 +4,7 @@ import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import { getArticleById } from '@/api/article.api'
 import type { ArticleResponse } from '@/types/article.types'
+import SaveButton from '@/components/article/SaveButton.vue'
 
 const props = defineProps<{ articleId: number }>()
 
@@ -11,7 +12,6 @@ const article = ref<ArticleResponse | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 
-// Configure marked: external links open in new tab, GFM tables
 const renderer = new marked.Renderer()
 const _link = renderer.link.bind(renderer)
 renderer.link = (token) => {
@@ -67,10 +67,17 @@ function formatDate(dateStr: string) {
         class="w-full max-h-80 object-cover rounded-2xl mb-8"
       />
 
-      <!-- Title -->
-      <h1 class="text-4xl font-bold text-gray-900 leading-tight mb-5">
-        {{ article.title }}
-      </h1>
+      <!-- Title + save -->
+      <div class="flex items-start gap-3 mb-5">
+        <h1 class="text-4xl font-bold text-gray-900 leading-tight flex-1">
+          {{ article.title }}
+        </h1>
+        <SaveButton
+          :article-id="article.articleId"
+          :saved="article.statusSave"
+          class="mt-2"
+        />
+      </div>
 
       <!-- Meta -->
       <div class="flex flex-wrap items-center gap-3 mb-8 pb-8 border-b border-gray-100">
@@ -116,7 +123,6 @@ function formatDate(dateStr: string) {
 </template>
 
 <style scoped>
-/* Override Tailwind prose for code blocks — IDE style */
 :deep(.article-content pre) {
   background: #282c34 !important;
   color: #abb2bf !important;
@@ -127,7 +133,6 @@ function formatDate(dateStr: string) {
   font-size: 0.875rem;
   line-height: 1.7;
 }
-
 :deep(.article-content pre code) {
   color: #abb2bf !important;
   background: transparent !important;
@@ -135,8 +140,6 @@ function formatDate(dateStr: string) {
   border-radius: 0 !important;
   font-size: inherit !important;
 }
-
-/* Inline code: subtle highlight */
 :deep(.article-content :not(pre) > code) {
   color: #e06c75 !important;
   background: #f3f4f6 !important;
@@ -144,8 +147,6 @@ function formatDate(dateStr: string) {
   border-radius: 0.25rem !important;
   font-size: 0.875em !important;
 }
-
-/* Tables in article view */
 :deep(.article-content table) {
   border-collapse: collapse;
   width: 100%;

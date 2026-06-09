@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ArticleResponse } from '@/types/article.types'
+import SaveButton from './SaveButton.vue'
 
 defineProps<{
   article: ArticleResponse
@@ -9,6 +10,7 @@ defineProps<{
 
 defineEmits<{
   (e: 'edit', id: number): void
+  (e: 'save-change', saved: boolean): void
 }>()
 
 function formatDate(dateStr: string) {
@@ -25,8 +27,7 @@ function onImgError(e: Event) {
 <template>
   <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow flex flex-col">
 
-    <!-- ── Cover image ── -->
-    <!-- Regular card: cover links to article -->
+    <!-- Cover image -->
     <RouterLink
       v-if="!isDraft && !showEdit"
       :to="`/article/${article.articleId}`"
@@ -42,7 +43,6 @@ function onImgError(e: Event) {
       <div v-else class="w-full h-40 bg-gradient-to-br from-blue-50 to-indigo-100" />
     </RouterLink>
 
-    <!-- Draft / editable card: cover is not a link -->
     <div v-else class="flex-shrink-0">
       <img
         v-if="article.image"
@@ -54,7 +54,7 @@ function onImgError(e: Event) {
       <div v-else class="w-full h-40 bg-gradient-to-br from-gray-50 to-gray-100" />
     </div>
 
-    <!-- ── Body ── -->
+    <!-- Body -->
     <div class="p-5 flex flex-col flex-1">
 
       <!-- Title -->
@@ -76,10 +76,9 @@ function onImgError(e: Event) {
         {{ article.description }}
       </p>
 
-      <!-- Spacer -->
       <div class="flex-1" />
 
-      <!-- Author + date -->
+      <!-- Author + date + save -->
       <div class="flex items-center justify-between mt-3">
         <RouterLink
           :to="`/profile/${article.users?.userId}`"
@@ -102,9 +101,15 @@ function onImgError(e: Event) {
           </span>
         </RouterLink>
 
-        <span class="text-xs text-gray-400 flex-shrink-0 ml-2">
-          {{ formatDate(article.createdAt) }}
-        </span>
+        <div class="flex items-center gap-1 flex-shrink-0 ml-2">
+          <span class="text-xs text-gray-400">{{ formatDate(article.createdAt) }}</span>
+          <SaveButton
+            v-if="!isDraft"
+            :article-id="article.articleId"
+            :saved="article.statusSave"
+            @change="(s: boolean) => $emit('save-change', s)"
+          />
+        </div>
       </div>
 
       <!-- Edit / draft actions -->
