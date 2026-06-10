@@ -13,17 +13,17 @@
     </changeSet>
     <changeSet id="default-category-creation" author="artem">
         <sql>
-            INSERT INTO category (id, categoryName) VALUES(1, 'Путешествия');
-            INSERT INTO category (id, categoryName) VALUES(2, 'Питание');
-            INSERT INTO category (id, categoryName) VALUES(3, 'Учеба');
-            INSERT INTO category (id, categoryName) VALUES(4, 'Работа');
-            INSERT INTO category (id, categoryName) VALUES(5, 'IT сфера');
-            INSERT INTO category (id, categoryName) VALUES(6, 'Литературоведение');
-            INSERT INTO category (id, categoryName) VALUES(7, 'Вероисповедание');
-            INSERT INTO category (id, categoryName) VALUES(8, 'Естественные науки');
-            INSERT INTO category (id, categoryName) VALUES(9, 'Психология');
-            INSERT INTO category (id, categoryName) VALUES(10, 'Медицина');
-            INSERT INTO category (id, categoryName) VALUES(11, 'Остальное');
+            INSERT INTO category (id, categoryName) VALUES(1, 'Бэкенд');
+            INSERT INTO category (id, categoryName) VALUES(2, 'Фронтенд');
+            INSERT INTO category (id, categoryName) VALUES(3, 'Мобильная разработка');
+            INSERT INTO category (id, categoryName) VALUES(4, 'Геймдев');
+            INSERT INTO category (id, categoryName) VALUES(5, 'Тестирование');
+            INSERT INTO category (id, categoryName) VALUES(6, 'AI и ML');
+            INSERT INTO category (id, categoryName) VALUES(7, 'Промышленная инженерия');
+            INSERT INTO category (id, categoryName) VALUES(8, 'Системный и бизнес-анализ');
+            INSERT INTO category (id, categoryName) VALUES(9, 'Дизайн');
+            INSERT INTO category (id, categoryName) VALUES(10, 'Администрирование');
+            INSERT INTO category (id, categoryName) VALUES(11, 'Информационная безопасность');
         </sql>
     </changeSet>
     <changeSet id="user-table-creation" author="artem">
