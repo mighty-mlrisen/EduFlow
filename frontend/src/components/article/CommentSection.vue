@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getComments, createComment } from '@/api/article.api'
 import type { CommentResponse } from '@/types/article.types'
 
@@ -35,8 +35,40 @@ onMounted(async () => {
   finally { loading.value = false }
 })
 
-// ── Helpers ───────────────────────────────────────────────────
+// ── Pagination ────────────────────────────────────────────────
+const PER_PAGE = 5
+const currentPage = ref(1)
+
 const topLevel = computed(() => comments.value.filter((c) => !c.parentCommentId))
+
+const totalPages = computed(() => Math.max(1, Math.ceil(topLevel.value.length / PER_PAGE)))
+
+const paginatedTopLevel = computed(() => {
+  const start = (currentPage.value - 1) * PER_PAGE
+  return topLevel.value.slice(start, start + PER_PAGE)
+})
+
+function smartPages(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const pages: (number | '...')[] = [1]
+  if (current > 3) pages.push('...')
+  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i)
+  if (current < total - 2) pages.push('...')
+  pages.push(total)
+  return pages
+}
+
+function goToPage(p: number) {
+  currentPage.value = p
+  cancelReply()
+  document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })
+}
+
+watch(totalPages, (newTotal) => {
+  if (currentPage.value > newTotal) currentPage.value = newTotal
+})
+
+// ── Helpers ───────────────────────────────────────────────────
 
 function getRootId(commentId: number): number {
   const c = comments.value.find((x) => x.commentId === commentId)
@@ -97,6 +129,7 @@ async function submitNew() {
   try {
     comments.value.push(await createComment(props.articleId, { comment: text }))
     newText.value = ''
+    currentPage.value = totalPages.value
   } catch {
     newError.value = 'Не удалось отправить комментарий'
   } finally {
@@ -167,7 +200,7 @@ async function submitReply() {
 
     <!-- Comment threads -->
     <div v-else class="space-y-8">
-      <div v-for="c in topLevel" :key="c.commentId">
+      <div v-for="c in paginatedTopLevel" :key="c.commentId">
 
         <!-- Top-level comment -->
         <div class="flex gap-4">
@@ -283,6 +316,46 @@ async function submitReply() {
         </div>
 
       </div>
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex items-center justify-center gap-1.5 mt-10">
+      <!-- Prev -->
+      <button
+        @click="goToPage(currentPage - 1)"
+        :disabled="currentPage === 1"
+        class="w-9 h-9 flex items-center justify-center rounded-lg text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <!-- Page numbers -->
+      <template v-for="p in smartPages(currentPage, totalPages)" :key="p">
+        <span v-if="p === '...'" class="w-9 h-9 flex items-center justify-center text-sm text-gray-400">…</span>
+        <button
+          v-else
+          @click="goToPage(p as number)"
+          class="w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors"
+          :class="currentPage === p
+            ? 'bg-blue-600 text-white'
+            : 'text-gray-600 hover:bg-gray-100'"
+        >
+          {{ p }}
+        </button>
+      </template>
+
+      <!-- Next -->
+      <button
+        @click="goToPage(currentPage + 1)"
+        :disabled="currentPage === totalPages"
+        class="w-9 h-9 flex items-center justify-center rounded-lg text-sm text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
     </div>
 
   </section>
