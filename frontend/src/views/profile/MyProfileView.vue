@@ -9,8 +9,10 @@ import FeedArticleCard from '@/components/article/FeedArticleCard.vue'
 import SortBar from '@/components/article/SortBar.vue'
 import UserCard from '@/components/user/UserCard.vue'
 import { useArticleSort } from '@/composables/useArticleSort'
+import { useThemeStore } from '@/stores/theme.store'
 
 const userStore = useUserStore()
+const themeStore = useThemeStore()
 
 const isEditing = ref(false)
 const saveLoading = ref(false)
@@ -363,6 +365,38 @@ function roleLabel(_role: string) {
           </div>
 
         </form>
+      </div>
+
+      <!-- Тема оформления -->
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4 mb-6 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+               :class="themeStore.isDark ? 'bg-slate-700' : 'bg-gray-100'">
+            <svg v-if="!themeStore.isDark" class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2a1 1 0 0 1 1 1v1a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm7.071-2.929a1 1 0 0 1 0 1.414l-.707.707a1 1 0 1 1-1.414-1.414l.707-.707a1 1 0 0 1 1.414 0zM21 11h1a1 1 0 1 1 0 2h-1a1 1 0 1 1 0-2zm-2.929 7.071a1 1 0 0 1-1.414 0l-.707-.707a1 1 0 0 1 1.414-1.414l.707.707a1 1 0 0 1 0 1.414zM13 20v1a1 1 0 1 1-2 0v-1a1 1 0 1 1 2 0zm-7.071-2.929a1 1 0 0 1 0-1.414l.707-.707A1 1 0 0 1 8.05 16.364l-.707.707a1 1 0 0 1-1.414 0zM3 11h1a1 1 0 1 1 0 2H3a1 1 0 1 1 0-2zm3.636-4.95a1 1 0 0 1 1.414 0l.707.707A1 1 0 0 1 7.343 8.17l-.707-.707a1 1 0 0 1 0-1.414z"/>
+            </svg>
+            <svg v-else class="w-5 h-5 text-blue-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-800">Тема оформления</p>
+            <p class="text-xs text-gray-400 mt-0.5">{{ themeStore.isDark ? 'Тёмная' : 'Светлая' }}</p>
+          </div>
+        </div>
+
+        <!-- Toggle switch -->
+        <button
+          @click="themeStore.toggle()"
+          class="relative inline-flex w-12 h-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none"
+          :class="themeStore.isDark ? 'bg-blue-600' : 'bg-gray-200'"
+          :aria-label="themeStore.isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'"
+        >
+          <span
+            class="pointer-events-none inline-block w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200"
+            :class="themeStore.isDark ? 'translate-x-6' : 'translate-x-0'"
+          />
+        </button>
       </div>
 
       <!-- Tab switcher -->
