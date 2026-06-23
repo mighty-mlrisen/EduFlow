@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import katex from 'katex'
 import { getArticleById, getArticleSummary } from '@/api/article.api'
 import type { ArticleResponse } from '@/types/article.types'
 import SaveButton from '@/components/article/SaveButton.vue'
@@ -40,13 +41,57 @@ onMounted(async () => {
   }
 })
 
+const contentRef = ref<HTMLElement | null>(null)
+
+function preprocessMath(text: string): string {
+  // Block math ($$...$$) first to avoid conflicts with inline
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_, formula) => {
+    try {
+      return `<div class="math-block">${katex.renderToString(formula.trim(), { throwOnError: false, displayMode: true, output: 'html' })}</div>`
+    } catch {
+      return `<code>$$${formula}$$</code>`
+    }
+  })
+  // Inline math ($...$)
+  text = text.replace(/\$([^$\n]+?)\$/g, (_, formula) => {
+    try {
+      return `<span class="math-inline">${katex.renderToString(formula.trim(), { throwOnError: false, displayMode: false, output: 'html' })}</span>`
+    } catch {
+      return `<code>$${formula}$</code>`
+    }
+  })
+  return text
+}
+
 const renderedContent = computed(() => {
   if (!article.value?.text) return ''
-  const html = marked.parse(article.value.text) as string
+  const processed = preprocessMath(article.value.text)
+  const html = marked.parse(processed) as string
   return DOMPurify.sanitize(html, {
     ADD_TAGS: ['img', 'span'],
-    ADD_ATTR: ['target', 'rel', 'src', 'alt', 'class', 'style', 'colspan', 'rowspan']
+    ADD_ATTR: ['target', 'rel', 'src', 'alt', 'class', 'style', 'colspan', 'rowspan',
+               'aria-hidden', 'data-type', 'data-formula'],
   })
+})
+
+// Fallback: render data-type math nodes from older articles saved before the $...$ serializer
+function applyFallbackKatex() {
+  if (!contentRef.value) return
+  contentRef.value.querySelectorAll<HTMLElement>('[data-type="math-inline"]').forEach(el => {
+    const formula = el.getAttribute('data-formula') || ''
+    el.innerHTML = ''
+    try { katex.render(formula, el, { throwOnError: false, displayMode: false, output: 'html' }) } catch {}
+  })
+  contentRef.value.querySelectorAll<HTMLElement>('[data-type="math-block"]').forEach(el => {
+    const formula = el.getAttribute('data-formula') || ''
+    el.innerHTML = ''
+    try { katex.render(formula, el, { throwOnError: false, displayMode: true, output: 'html' }) } catch {}
+  })
+}
+
+watch(renderedContent, async () => {
+  await nextTick()
+  applyFallbackKatex()
 })
 
 const isOwnArticle = computed(() =>
@@ -192,7 +237,7 @@ async function toggleSummary() {
 
               <p v-else-if="summaryError" class="text-sm text-red-500">{{ summaryError }}</p>
 
-              <p v-else class="text-sm text-gray-700 leading-relaxed">{{ summaryText }}</p>
+              <p v-else class="text-sm text-gray-700 leading-relaxed text-justify">{{ summaryText }}</p>
 
           </div>
         </Transition>
@@ -204,7 +249,7 @@ async function toggleSummary() {
       </p>
 
       <!-- Content -->
-      <div class="article-content prose prose-lg prose-gray max-w-none" v-html="renderedContent" />
+      <div ref="contentRef" class="article-content prose prose-lg prose-gray max-w-none" v-html="renderedContent" />
 
       <!-- Likes -->
       <div class="mt-10 pt-6 border-t border-gray-100">
@@ -279,5 +324,17 @@ async function toggleSummary() {
 }
 :deep(.article-content tr:nth-child(even) td) {
   background: #fafafa;
+}
+:deep(.article-content .math-block) {
+  overflow-x: auto;
+  text-align: center;
+  margin: 1.5rem 0;
+  padding: 0.5rem 0;
+}
+:deep(.article-content .math-inline) {
+  display: inline;
+}
+:deep(.article-content .katex) {
+  font-size: 1.1em;
 }
 </style>
